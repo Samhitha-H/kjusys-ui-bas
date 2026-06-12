@@ -66,7 +66,7 @@ module.exports = {
         examinations: `https://kjusys-examinations.kristujayanti.edu.in/remoteEntry.js?v=${REMOTE_ENTRY_VERSION}`,
         portal: `https://kjusys-events.kristujayanti.edu.in/remoteEntry.js?v=${REMOTE_ENTRY_VERSION}`,
         globalrelations: `https://kjusys-global-relations.kristujayanti.edu.in/remoteEntry.js?v=${REMOTE_ENTRY_VERSION}`,
-
+        "placement-student": "https://kjusys-placement-student.kristujayanti.edu.in/remoteEntry.js",
       },
       shared: share({
         // ── Core Angular packages ──────────────────────────────────────────

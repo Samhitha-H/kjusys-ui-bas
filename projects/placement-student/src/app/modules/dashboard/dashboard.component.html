@@ -1,0 +1,455 @@
+<!-- TOAST BANNER -->
+<div *ngIf="toast$ | async as toast" id="toast" [class.show]="toast.show">
+  <span id="toast-msg">{{toast.message}}</span>
+</div>
+
+<div style="width: 100%; height: 100%; position: relative; display: flex; flex-direction: column;">
+  <main class="page-main" *ngIf="!(isProfileModalOpen$ | async)">
+    <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">
+      Placements/ <span style="color:#111827; font-weight:700;">Dashboard</span>
+    </p>
+    <div class="page-header-wrap"
+      style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+      <h1 style="font-size:20px; font-weight:450; color:#111827;">Dashboard</h1>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <!-- STUDENT SELECTOR FOR TESTING (REMOVED) -->
+        <button (click)="openEditProfile()"
+          style="background:#2563eb; color:#fff; font-size:13px; font-weight:500; padding:8px 18px; border-radius:8px; border:none; cursor:pointer;">
+          Edit Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN LAYOUT -->
+    <div class="dashboard-page-grid">
+
+      <!-- TOP ROW -->
+      <div class="dashboard-top-row">
+        <!-- PLACEMENT STATUS -->
+        <div class="card" style="padding:24px; display:flex; flex-direction:column;">
+          <div
+            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; margin-top:12px;">
+            <span style="font-size:12px; font-weight:500; color:#2563eb; letter-spacing:0.3px;">Placement Status</span>
+            <div *ngIf="offerLetter$ | async as ol" style="display:inline-flex; align-items:center; gap:8px;">
+
+              <!-- Upload Offer Letter -->
+              <button *ngIf="!ol.uploaded" id="offer-letter-btn" (click)="triggerOfferLetterUpload()"
+                style="display:inline-flex; align-items:center; gap:3px; background:none; border:none; cursor:pointer; color:#2563eb; font-size:11px; font-weight:500; font-family:'Inter',sans-serif; padding:0; line-height:1;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                Upload Offer Letter
+              </button>
+
+              <!-- Offer Letter Uploaded -->
+              <a *ngIf="ol.uploaded" [href]="ol.fileUrl" [download]="ol.fileName"
+                style="display:inline-flex; align-items:center; gap:3px; background:none; border:none; cursor:pointer; color:#16a34a; font-size:11px; font-weight:500; font-family:'Inter',sans-serif; padding:0; line-height:1; text-decoration:none;"
+                [title]="'Click to download (Current: ' + ol.fileName + ')'">
+                Offer Letter Uploaded
+              </a>
+
+              <!-- Remove Button -->
+              <button *ngIf="ol.uploaded" id="offer-letter-remove-btn" (click)="confirmRemoveOfferLetter()"
+                style="display:inline-flex; align-items:center; background:none; border:none; cursor:pointer; color:#dc2626; padding:0;"
+                title="Remove offer letter">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
+
+            <input type="file" id="dashboard-offer-letter-input" accept=".pdf" style="display:none;"
+              (change)="handleOfferLetterUpload($event)" />
+          </div>
+          <ng-container *ngIf="profile$ | async as profile">
+            <p style="font-weight:600; font-size:15px; color:#111827;">
+              {{ profile.isPlaced ? 'Placed at ' + profile.placedCompany : 'Looking for Placement' }}
+            </p>
+            <p style="font-size:13px; color:#6b7280; margin-top:2px;">
+              {{ profile.isPlaced ? profile.placedRole + ' • ' + profile.placedLpa + ' LPA' : 'Opted-in for Placement'
+              }}
+            </p>
+          </ng-container>
+        </div>
+
+        <!-- ACTIVE APPLICATIONS COUNT -->
+        <div class="card" style="padding:24px; display:flex; flex-direction:column;">
+          <p style="font-size:12px; font-weight:600; color:#1D1D1F; margin-bottom:12px; margin-top:12px;">Active
+            Applications</p>
+          <p style="font-size:36px; font-weight:650; color:#111827; line-height:1;">
+            {{ getActiveApplicationsCount(applications$ | async) }}
+          </p>
+        </div>
+
+        <!-- REMINDERS -->
+        <div class="card" style="padding:24px; display:flex; flex-direction:column;">
+          <p style="font-size:11px; font-weight:600; color:#1D1D1F; margin-bottom:12px;">Reminders</p>
+
+          <div *ngFor="let reminder of reminders$ | async; let last = last" class="reminder-flex"
+            [style.border-bottom]="!last ? '1px solid #f3f4f6' : 'none'" [style.padding-top]="!last ? '0' : '4px'"
+            [style.padding-bottom]="!last ? '10px' : '0'" [style.margin-bottom]="!last ? '10px' : '0'"
+            style="display:flex; align-items:flex-start; justify-content:space-between;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span style="font-weight:600; font-size:13px; color:#111827;">{{reminder.company}}</span>
+                <span class="badge-upcoming"
+                  style="font-size:11px; font-weight:500; padding:2px 8px; border-radius:20px;">
+                  {{reminder.type}}
+                </span>
+              </div>
+              <p style="font-size:13px; color:#6b7280;">{{reminder.title}}</p>
+            </div>
+            <div class="reminder-date-wrap" style="text-align:right; flex-shrink:0; margin-left:16px;">
+              <p style="font-size:11px; color:#9ca3af; margin-bottom:4px;">Drive Date</p>
+              <div style="display:flex; align-items:center; gap:4px; font-size:13px; font-weight:500; color:#1D1D1F;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                {{reminder.date}}
+              </div>
+            </div>
+          </div>
+          <p *ngIf="(reminders$ | async)?.length === 0" style="font-size:12px; color:#9ca3af;">No upcoming reminders.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="dashboard-bottom-row">
+
+        <!-- MY APPLICATIONS TABLE -->
+        <div style="display: flex; flex-direction: column; flex: 1;">
+          <h2 style="font-size:14px; font-weight:600; color:#111827; margin-bottom: 12px;">My Applications</h2>
+          <div class="card" style="overflow:hidden; display: flex; flex-direction: column;">
+            <div class="tbl-header"
+              style="display:grid; grid-template-columns:1fr 180px 140px; padding:12px 20px; border-bottom:1px solid #f3f4f6; background:#f9fafb;">
+              <span style="font-size:11px; font-weight:500; color:#9ca3af;">
+                Company & Role
+              </span>
+              <span style="font-size:11px; font-weight:500; color:#9ca3af;">
+                Date
+              </span>
+              <span style="font-size:11px; font-weight:500; color:#9ca3af; text-align:right;">
+                Status
+              </span>
+            </div>
+
+            <div *ngFor="let app of applications$ | async" class="tbl-row"
+              style="display:grid; grid-template-columns:1fr 180px 140px; align-items:center; padding:16px 20px;">
+              <div>
+                <p style="font-weight:600; font-size:12px; color:#111827;">{{app.company}}</p>
+                <p style="font-size:11px; color:#9ca3af; margin-top:2px;">{{app.title}}</p>
+              </div>
+              <span style="font-size:12px; color:#6b7280;">{{app.dateApplied}}</span>
+              <div style="text-align:right;">
+                <span [class.badge-selected]="app.status === 'Selected'"
+                  [class.badge-progress]="app.status === 'In Progress'"
+                  [class.badge-notselected]="app.status === 'Not Selected'"
+                  [class.badge-upcoming]="app.status === 'Upcoming Drive'"
+                  style="font-size:10px; font-weight:600; padding:4px 10px; border-radius:20px; display:inline-block;">
+                  {{app.status}}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LATEST DRIVE PREVIEW -->
+        <div *ngIf="latestDrive">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <h2 style="font-size:14px; font-weight:600; color:#111827;">Latest Drives</h2>
+            <button (click)="goToAllDrives()"
+              style="background:none; border:none; cursor:pointer; color:#2563eb; font-size:13px; font-weight:500; display:flex; align-items:center; gap:3px; padding:0;">
+              Go to All Drives
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="card" (click)="goToAllDrives()"
+            style="padding:24px; display:flex; flex-direction:column; justify-content:center; cursor:pointer;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px;">
+              <div>
+                <p style="font-weight:600; font-size:13px; color:#111827;">{{latestDrive.title}}</p>
+                <p style="font-size:12px; color:#6b7280; margin-top:2px;">{{latestDrive.company}}</p>
+              </div>
+              <span class="lpa-badge" style="margin-left:12px;">{{latestDrive.lpa}} LPA</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; margin-top:10px; color:#9ca3af; font-size:12px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              Closes {{latestDrive.appCloses | date:'MMM d'}}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+  <!-- ══ EDIT PROFILE PAGE VIEW ══ -->
+  <main class="page-main" *ngIf="isProfileModalOpen$ | async"
+    style="flex:1; overflow-y:auto; padding: 16px 20px 80px 20px;">
+    <div style="width: 100%; display: flex; flex-direction: column;" *ngIf="profile$ | async as profile">
+      <div class="profile-header-wrap"
+        style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
+        <div>
+          <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">Placements/ <span
+              style="color:#111827; font-weight:700;">Placement Profile</span></p>
+          <h1 style="font-size:20px; font-weight:400; color:#111827;">Placement Profile</h1>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button (click)="closeEditProfile()"
+            style="background:#fff; border:1px solid #d1d5db; cursor:pointer; font-size:13px; font-weight:500; color:#374151; padding:8px 18px; border-radius:8px;">Cancel</button>
+          <button (click)="saveProfile()"
+            style="background:#2563eb; color:#fff; font-size:13px; font-weight:500; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save Profile
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-grid" style="gap:16px; align-items:start;">
+
+        <!-- LEFT COLUMN -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="card" style="padding:20px; text-align:center;">
+            <div
+              style="width:64px; height:64px; background:#dbeafe; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:26px; font-weight:600; color:#2563eb;">
+              {{profile.name[0]}}
+            </div>
+            <p style="font-size:15px; font-weight:600; color:#111827; margin-bottom:2px;">{{profile.name}}</p>
+            <p style="font-size:12px; color:#6b7280; margin-bottom:10px;">{{profile.course}}</p>
+            <div
+              style="display:inline-flex; align-items:center; gap:5px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:20px; padding:4px 12px;">
+              <span style="font-size:11px; font-weight:600; color:#16a34a;">Opted-in for Placement</span>
+            </div>
+          </div>
+
+          <!-- ACADEMIC STANDINGS -->
+          <div class="card" style="padding:16px;">
+            <p
+              style="font-size:11px; font-weight:600; color:#374151; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px;">
+              Academic Standing
+            </p>
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="font-size:12px; color:#6b7280;">10th Score</span>
+                <span style="font-size:12px; font-weight:500; color:#111827;">{{profile.score10th}}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="font-size:12px; color:#6b7280;">12th Score</span>
+                <span style="font-size:12px; font-weight:500; color:#111827;">{{profile.score12th}}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="font-size:12px; color:#6b7280;">Aggregate / CGPA</span>
+                <span style="font-size:12px; font-weight:500; color:#111827;">{{profile.cgpa}}</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="font-size:12px; color:#6b7280;">Attendance</span>
+                <span style="font-size:12px; font-weight:500; color:#111827;">{{profile.attendance}}</span>
+              </div>
+            </div>
+            <p style="font-size:10px; color:#9ca3af; margin-top:12px; line-height:1.5;">Academic records are synced
+              directly from the university ERP.</p>
+          </div>
+
+          <!-- RESUME SECTION -->
+          <div class="card" style="padding:16px;" id="resume-card">
+            <p style="font-size:13px; font-weight:600; color:#111827; margin-bottom:12px;">Resume</p>
+
+            <!-- Upload Dropzone -->
+            <div *ngIf="!profile.resumeUploaded" id="resume-dropzone" class="upload-zone"
+              [class.drag-over]="resumeDragOver" (click)="resumeFileInput.click()" (dragover)="onResumeDragOver($event)"
+              (dragleave)="onResumeDragLeave($event)" (drop)="onResumeDrop($event)">
+              <div
+                style="width:40px; height:40px; background:#dbeafe; border-radius:10px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 16 12 12 8 16" />
+                  <line x1="12" y1="12" x2="12" y2="21" />
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                </svg>
+              </div>
+              <p style="font-size:13px; font-weight:600; color:#2563eb; margin-bottom:3px;">Upload Resume (PDF)</p>
+              <p style="font-size:11px; color:#9ca3af;">Max 5MB</p>
+            </div>
+            <input #resumeFileInput type="file" id="resume-file-input" accept=".pdf" style="display:none;"
+              (change)="handleResumeFileSelect($event)" />
+
+            <!-- Uploaded Preview -->
+            <div *ngIf="profile.resumeUploaded" id="resume-file-preview">
+              <div
+                style="display:flex; align-items:center; gap:10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+                <div class="resume-icon"
+                  style="background:#fee2e2; padding:8px; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <p id="resume-filename"
+                    style="font-size:13px; font-weight:600; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    {{profile.resumeFileName}}
+                  </p>
+                  <p id="resume-filesize" style="font-size:11px; color:#9ca3af;">Updated today</p>
+                </div>
+                <button (click)="confirmRemoveResume()"
+                  style="background:none; border:none; cursor:pointer; font-size:12px; font-weight:600; color:#dc2626; padding:0;">
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="card" style="padding:20px;">
+            <p style="font-size:14px; font-weight:600; color:#111827; margin-bottom:16px;">Contact & Links</p>
+            <div class="contact-links-grid" style="gap:14px;">
+              <div>
+                <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Phone Number</p>
+                <input class="ep-input" type="text" [(ngModel)]="editForm.phone" />
+              </div>
+              <div>
+                <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Personal Email</p>
+                <input class="ep-input" type="email" [(ngModel)]="editForm.email" />
+              </div>
+              <div>
+                <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">LinkedIn Profile</p>
+                <div style="position:relative;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                  </span>
+                  <input class="ep-input" type="text" [(ngModel)]="editForm.linkedin" style="padding-left:28px;" />
+                </div>
+              </div>
+              <div>
+                <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">GitHub / Portfolio</p>
+                <div style="position:relative;">
+                  <span style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                  </span>
+                  <input class="ep-input" type="text" [(ngModel)]="editForm.github" style="padding-left:28px;" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:20px;">
+            <p style="font-size:14px; font-weight:600; color:#111827; margin-bottom:16px;">Professional Details</p>
+            <div style="margin-bottom:16px;">
+              <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Technical Skills</p>
+              <input class="ep-input" type="text" [(ngModel)]="editForm.skills" />
+              <p style="font-size:11px; color:#9ca3af; margin-top:5px;">These skills will be matched against job
+                requirements.</p>
+            </div>
+            <div style="margin-bottom:16px;">
+              <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Key Projects</p>
+              <textarea class="ep-textarea" placeholder="Briefly describe 1-2 major projects…"
+                [(ngModel)]="editForm.projects" (input)="autoResize($event)"></textarea>
+            </div>
+            <div>
+              <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Notable Achievements /
+                Certifications</p>
+              <textarea class="ep-textarea" placeholder="e.g. AWS Cloud Practitioner, Hackathon Winner…"
+                [(ngModel)]="editForm.achievements" (input)="autoResize($event)"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ REMOVE RESUME CONFIRMATION MODAL ══ -->
+  <div *ngIf="showRemoveResumeModal" id="remove-resume-modal"
+    style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center;">
+    <div class="confirm-modal-box"
+      style="background:#fff; border-radius:16px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,0.15); text-align:center;">
+      <div
+        style="width:52px; height:52px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+        </svg>
+      </div>
+      <p style="font-size:16px; font-weight:700; color:#111827; margin-bottom:8px;">Remove Resume?</p>
+      <p style="font-size:13px; color:#6b7280; line-height:1.6; margin-bottom:24px;">
+        Are you sure you want to remove your uploaded resume?
+      </p>
+      <div style="display:flex; gap:10px;">
+        <button (click)="closeRemoveResumeConfirm()"
+          style="flex:1; background:#fff; border:1px solid #d1d5db; border-radius:8px; padding:9px; font-size:13px; font-weight:500; color:#374151; cursor:pointer; font-family:'Inter',sans-serif;">
+          Cancel
+        </button>
+        <button (click)="removeResume()"
+          style="flex:1; background:#dc2626; color:#fff; border:none; border-radius:8px; padding:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">
+          Yes, Remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REMOVE OFFER LETTER CONFIRMATION MODAL ══ -->
+<div *ngIf="showRemoveOfferModal" id="remove-offer-letter-modal"
+  style="display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center;">
+  <div class="confirm-modal-box"
+    style="background:#fff; border-radius:16px; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,0.15); text-align:center;">
+    <div
+      style="width:52px; height:52px; background:#fee2e2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+        <path d="M10 11v6M14 11v6M9 6V4h6v2" />
+      </svg>
+    </div>
+    <p style="font-size:16px; font-weight:700; color:#111827; margin-bottom:8px;">Remove Offer Letter?</p>
+    <p style="font-size:13px; color:#6b7280; line-height:1.6; margin-bottom:24px;">
+      Are you sure you want to remove your uploaded offer letter?
+    </p>
+    <div style="display:flex; gap:10px;">
+      <button (click)="closeRemoveOfferLetterConfirm()"
+        style="flex:1; background:#fff; border:1px solid #d1d5db; border-radius:8px; padding:9px; font-size:13px; font-weight:500; color:#374151; cursor:pointer; font-family:'Inter',sans-serif;">
+        Cancel
+      </button>
+      <button (click)="removeOfferLetter()"
+        style="flex:1; background:#dc2626; color:#fff; border:none; border-radius:8px; padding:9px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">
+        Yes, Remove
+      </button>
+    </div>
+  </div>
+</div>

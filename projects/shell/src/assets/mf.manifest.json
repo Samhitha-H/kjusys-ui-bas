@@ -1,1 +1,23 @@
-{}
+{
+  "placement-student": {
+    "remoteEntry": "http://localhost:4202/remoteEntry.js",
+    "displayName": "Placements",
+    "routePath": "placement-student",
+    "subModule": [
+      {
+        "exposedModule": "./DashboardModule",
+        "displayName": "Dashboard",
+        "subPath": "placement-student/dashboard",
+        "ngModuleName": "DashboardModule",
+        "pinned": false
+      },
+      {
+        "exposedModule": "./DrivesModule",
+        "displayName": "Drives",
+        "subPath": "placement-student/drives",
+        "ngModuleName": "DrivesModule",
+        "pinned": false
+      }
+    ]
+  }
+}

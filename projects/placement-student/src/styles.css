@@ -1,0 +1,13 @@
+/* Global styles */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  scroll-behavior: smooth;
+}
+/* Ensure app root fills the viewport */
+app-root, .app-root {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}

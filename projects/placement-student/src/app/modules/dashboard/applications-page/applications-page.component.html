@@ -1,0 +1,45 @@
+<div style="flex:1; overflow-y:auto; width: 100%;">
+  <main class="page-main">
+    <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">
+      Placements/ <span style="color:#111827; font-weight:700;">My Applications</span>
+    </p>
+    <h1 style="font-size:20px; font-weight:600; color:#111827; margin-bottom:20px;">My Applications</h1>
+
+    <div class="card" style="overflow:hidden;">
+      <div class="apps-header"
+        style="display:grid; grid-template-columns:1fr 180px 160px 140px; padding:10px 20px; border-bottom:1px solid #f3f4f6; background:#f9fafb;">
+        <span
+          style="font-size:11px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.6px;">Company
+          & Role</span>
+        <span
+          style="font-size:11px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.6px;">Applied
+          On</span>
+        <span
+          style="font-size:11px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.6px;">Package</span>
+        <span
+          style="font-size:11px; font-weight:600; color:#9ca3af; text-transform:uppercase; letter-spacing:0.6px;">Status</span>
+      </div>
+
+      <div id="applications-list">
+        <div *ngFor="let app of applications$ | async" class="tbl-row"
+          style="display:grid; grid-template-columns:1fr 180px 160px 140px; align-items:center; padding:13px 20px;">
+          <div>
+            <p style="font-weight:600; font-size:13px; color:#111827;">{{app.company}}</p>
+            <p style="font-size:12px; color:#9ca3af; margin-top:2px;">{{app.title}}</p>
+          </div>
+          <span style="font-size:13px; color:#6b7280;">{{app.dateApplied}}</span>
+          <span style="font-size:13px; color:#6b7280;">{{app.lpa}} LPA</span>
+          <div>
+            <span [class.badge-selected]="app.status === 'Selected'"
+              [class.badge-progress]="app.status === 'In Progress'"
+              [class.badge-notselected]="app.status === 'Not Selected'"
+              [class.badge-upcoming]="app.status === 'Upcoming Drive'"
+              style="font-size:12px; font-weight:600; padding:3px 12px; border-radius:20px;">
+              {{app.status}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

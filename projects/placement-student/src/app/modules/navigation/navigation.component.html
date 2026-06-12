@@ -1,0 +1,15 @@
+<ng-container *ngIf="leftmenu$ | async as leftmenu">
+  <lib-menu-header-lib *ngIf="!isFullScreen" [leftMenuObject]="leftmenu" [currentUser]="currentUser"
+    (menuToggle)="menuToggle()">
+  </lib-menu-header-lib>
+  <div class="layout" [ngClass]="{'full-screen-layout': isFullScreen}">
+    <div class="left-menu" [ngClass]="{'hidden': toggle || isFullScreen}">
+      <lib-left-menu-lib [leftMenuObject]="leftmenu"></lib-left-menu-lib>
+    </div>
+    <main class="main-content px-2 bg-[#F4F7FE]">
+      <div style="flex: 1; display: flex; overflow: hidden; width: 100%;">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</ng-container>
