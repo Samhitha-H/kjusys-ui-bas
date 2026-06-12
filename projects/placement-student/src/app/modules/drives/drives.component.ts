@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SharedStateService, Profile, Drive, Application, FormAnswer } from '../dashboard/shared-state.service';
-import { ToastService, ToastState } from '../dashboard/toast.service';
+import { SharedToastService } from '@libs/shared-toast';
 
 @Component({
   selector: 'app-drives',
@@ -14,7 +14,6 @@ export class DrivesComponent implements OnInit {
   public drives$: Observable<Drive[]>;
   public profile$: Observable<Profile>;
   public applications$: Observable<Application[]>;
-  public toast$: Observable<ToastState>;
 
   public activeView: 'list' | 'detail' = 'list';
   public selectedDrive: Drive | null = null;
@@ -31,15 +30,15 @@ export class DrivesComponent implements OnInit {
   public uploadedResumeFileSize = '';
 
   public answeredQuestions: { [id: string]: any } = {};
+  public currentQuestions: any[] = [];
 
   constructor(
     private sharedStateService: SharedStateService,
-    private toastService: ToastService
+    private toastService: SharedToastService
   ) {
     this.drives$ = this.sharedStateService.drives$;
     this.profile$ = this.sharedStateService.profile$;
     this.applications$ = this.sharedStateService.applications$;
-    this.toast$ = this.toastService.toast$;
   }
 
   ngOnInit(): void {
@@ -75,6 +74,7 @@ export class DrivesComponent implements OnInit {
     this.uploadedResumeFileName = '';
     this.uploadedResumeFileSize = '';
     this.answeredQuestions = {};
+    this.currentQuestions = this.getCompanyQuestions();
     document.body.style.overflow = 'hidden';
   }
 
@@ -86,8 +86,7 @@ export class DrivesComponent implements OnInit {
   public chooseResume(type: 'default' | 'upload'): void {
     this.resumeSource = type;
     if (type === 'default') {
-      const questions = this.getCompanyQuestions();
-      if (questions && questions.length > 0) {
+      if (this.currentQuestions && this.currentQuestions.length > 0) {
         this.applyStep = 'questions';
       } else {
         this.applyStep = 'default-confirm';
@@ -102,8 +101,17 @@ export class DrivesComponent implements OnInit {
   }
 
   public getCompanyQuestions(): any[] {
-    if (this.selectedDrive && this.selectedDrive.additionalQuestions && this.selectedDrive.additionalQuestions.length > 0) {
-      return this.selectedDrive.additionalQuestions;
+    if (this.selectedDrive) {
+      const sourceQuestions = this.selectedDrive.additionalQuestions || this.selectedDrive.fields || [];
+      if (sourceQuestions.length > 0) {
+        return sourceQuestions.map(q => ({
+          id: q.fieldId || (q as any).id,
+          type: q.fieldType || (q as any).type,
+          label: q.label,
+          required: q.required,
+          options: q.options
+        }));
+      }
     }
     return [
       { id: 'gen-q1', type: 'textarea', label: 'Why are you interested in joining ' + (this.selectedDrive ? this.selectedDrive.company : 'this company') + '?', required: true },
@@ -145,8 +153,7 @@ export class DrivesComponent implements OnInit {
 
   public proceedFromUpload(): void {
     if (!this.uploadedResumeFile) return;
-    const questions = this.getCompanyQuestions();
-    if (questions && questions.length > 0) {
+    if (this.currentQuestions && this.currentQuestions.length > 0) {
       this.applyStep = 'questions';
     } else {
       this.applyStep = 'upload-confirm';
@@ -162,8 +169,7 @@ export class DrivesComponent implements OnInit {
   }
 
   public proceedFromQuestions(): void {
-    const questions = this.getCompanyQuestions();
-    for (let q of questions) {
+    for (let q of this.currentQuestions) {
       const answer = this.answeredQuestions[q.id];
       if (q.required) {
         if (q.type === 'checkbox') {
@@ -226,7 +232,7 @@ export class DrivesComponent implements OnInit {
       answer: String(this.answeredQuestions[key])
     }));
     this.sharedStateService.addApplication(this.selectedDrive, formAnswers);
-    this.toastService.showToast(`Applied to ${this.selectedDrive.company} – ${this.selectedDrive.title}!`);
+    this.toastService.success(`Applied to ${this.selectedDrive.company} – ${this.selectedDrive.title}!`);
     this.closeApply();
     this.goBackToList();
   }

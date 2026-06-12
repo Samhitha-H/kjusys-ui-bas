@@ -1,7 +1,4 @@
-<!-- TOAST BANNER -->
-<div *ngIf="toast$ | async as toast" id="toast" [class.show]="toast.show">
-  <span id="toast-msg">{{toast.message}}</span>
-</div>
+
 
 <div style="width: 100%; height: 100%; position: relative; display: flex; flex-direction: column;">
   <main class="page-main" *ngIf="!(isProfileModalOpen$ | async)">

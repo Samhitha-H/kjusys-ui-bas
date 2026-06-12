@@ -2,7 +2,7 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { SharedStateService, Profile, Application, OfferLetter, Drive, Reminder } from './shared-state.service';
-import { ToastService, ToastState } from './toast.service';
+import { SharedToastService } from '@libs/shared-toast';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,7 +13,6 @@ import { ToastService, ToastState } from './toast.service';
 export class DashboardComponent implements OnInit {
   public profile$: Observable<Profile>;
   public offerLetter$: Observable<OfferLetter>;
-  public toast$: Observable<ToastState>;
   public isProfileModalOpen$: Observable<boolean>;
   public students$: Observable<Profile[]>;
   public activeStudentId$: Observable<string>;
@@ -29,14 +28,13 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private sharedStateService: SharedStateService,
-    private toastService: ToastService,
+    private toastService: SharedToastService,
     private router: Router,
     private route: ActivatedRoute
   ) {
     this.profile$ = this.sharedStateService.profile$;
     this.applications$ = this.sharedStateService.applications$;
     this.offerLetter$ = this.sharedStateService.offerLetter$;
-    this.toast$ = this.toastService.toast$;
     this.isProfileModalOpen$ = this.sharedStateService.profileModalOpen$;
     this.students$ = this.sharedStateService.students$;
     this.activeStudentId$ = this.sharedStateService.activeStudentId$;
@@ -128,7 +126,7 @@ export class DashboardComponent implements OnInit {
   public saveProfile(): void {
     this.sharedStateService.updateProfile(this.editForm);
     this.sharedStateService.setProfileModalOpen(false);
-    this.toastService.showToast('Profile saved successfully!');
+    this.toastService.success('Profile saved successfully!');
   }
 
   // --- RESUME UPLOADS IN PROFILE MODAL ---
@@ -161,7 +159,7 @@ export class DashboardComponent implements OnInit {
 
   private uploadResumeFile(file: File): void {
     if (file.type !== 'application/pdf') {
-      this.toastService.showToast('Please upload a PDF file.');
+      this.toastService.success('Please upload a PDF file.');
       return;
     }
     const size = file.size > 1024 * 1024
@@ -169,7 +167,7 @@ export class DashboardComponent implements OnInit {
       : (file.size / 1024).toFixed(0) + ' KB';
 
     this.sharedStateService.uploadResume(file.name, size);
-    this.toastService.showToast('Resume uploaded successfully!');
+    this.toastService.success('Resume uploaded successfully!');
   }
 
   public confirmRemoveResume(): void {
@@ -187,7 +185,7 @@ export class DashboardComponent implements OnInit {
     if (fileInput) {
       fileInput.value = '';
     }
-    this.toastService.showToast('Resume removed successfully.');
+    this.toastService.success('Resume removed successfully.');
   }
 
   public autoResize(event: Event): void {

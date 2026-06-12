@@ -1,7 +1,4 @@
-<!-- TOAST BANNER -->
-<div *ngIf="toast$ | async as toast" id="toast" [class.show]="toast.show">
-  <span id="toast-msg">{{toast.message}}</span>
-</div>
+
 
 <!-- LOADING SPINNER -->
 <div *ngIf="isLoading"
@@ -413,7 +410,7 @@
       <p style="font-size:14px; font-weight:600; color:#111827; margin-bottom:12px;">Additional Questions</p>
 
       <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
-        <div *ngFor="let q of getCompanyQuestions()" style="display:flex; flex-direction:column; gap:6px;">
+        <div *ngFor="let q of currentQuestions" style="display:flex; flex-direction:column; gap:6px;">
           <label style="font-size:12px; font-weight:500; color:#374151;">
             {{q.label}} <span *ngIf="q.required" style="color:#dc2626;">*</span>
           </label>
