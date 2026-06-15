@@ -49,13 +49,13 @@ const routes: Routes = [];
     { provide: MFE_COMMON_SERVICE, useClass: MfeCommonService },
     { provide: VERSION_CHECK_SERVICE, useExisting: VersionCheckService },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CommonHttpInterceptor,
-      multi: true,
-    },
-    AuthService,
-    AuthGuard,
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: CommonHttpInterceptor,
+    //   multi: true,
+    // },
+    // AuthService,
+    // AuthGuard,
     CookieService,
     SharedToastService
   ],

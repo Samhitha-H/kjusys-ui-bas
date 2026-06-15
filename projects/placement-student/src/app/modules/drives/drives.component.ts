@@ -1,8 +1,10 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { SharedStateService, Profile, Drive, Application, FormAnswer } from '../dashboard/shared-state.service';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
+import { map, filter, catchError } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { SharedToastService } from '@libs/shared-toast';
+import { environment } from '../../../environments/environment';
+import { Profile, Drive, Application, FormAnswer, mapBackendToProfile, mapBackendToDrives, mapBackendToApplication, extractDataArray, checkEligibility } from '../dashboard/dashboard.component';
 
 @Component({
   selector: 'app-drives',
@@ -15,9 +17,14 @@ export class DrivesComponent implements OnInit {
   public profile$: Observable<Profile>;
   public applications$: Observable<Application[]>;
 
+  private profileSubject = new BehaviorSubject<Profile | null>(null);
+  private drivesSubject = new BehaviorSubject<Drive[]>([]);
+  private applicationsSubject = new BehaviorSubject<Application[]>([]);
+
   public activeView: 'list' | 'detail' = 'list';
   public selectedDrive: Drive | null = null;
   public searchQuery: string = '';
+  public checkEligibility = checkEligibility;
   public isLoading = true;
 
   // Apply Modal Wizard state
@@ -32,17 +39,112 @@ export class DrivesComponent implements OnInit {
   public answeredQuestions: { [id: string]: any } = {};
   public currentQuestions: any[] = [];
 
+  private currentStudentId = '6a2b808f2cfa1b3892b73335';
+
   constructor(
-    private sharedStateService: SharedStateService,
-    private toastService: SharedToastService
+    private http: HttpClient,
+    private toastService: SharedToastService,
+    private cdr: ChangeDetectorRef
   ) {
-    this.drives$ = this.sharedStateService.drives$;
-    this.profile$ = this.sharedStateService.profile$;
-    this.applications$ = this.sharedStateService.applications$;
+    this.profile$ = this.profileSubject.asObservable().pipe(
+      filter(p => p !== null),
+      map(p => p as Profile)
+    );
+    this.drives$ = combineLatest([
+      this.drivesSubject.asObservable(), 
+      this.profileSubject.asObservable(),
+      this.applicationsSubject.asObservable()
+    ]).pipe(
+      map(([drives, profile, apps]) => {
+        if (!profile) return [];
+        return drives.filter(d => this.hasApplied(d, apps) || checkEligibility(d, profile).eligible);
+      })
+    );
+    this.applications$ = this.applicationsSubject.asObservable();
   }
 
   ngOnInit(): void {
-    this.isLoading = false;
+    // Fetch Profile
+    this.http.get<any>(`${environment.baseUrl}/placements-app/get-student/${this.currentStudentId}`).pipe(
+      map(data => mapBackendToProfile(data))
+    ).subscribe(prof => {
+      this.profileSubject.next(prof);
+      this.cdr.detectChanges();
+    });
+
+    // Fetch Drives, Companies, and Batches
+    const drives$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/placements`).pipe(catchError(() => of([])));
+    const companies$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-comnpanies`).pipe(catchError(() => of([])));
+    const batches$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-batches`).pipe(catchError(() => of([])));
+
+    combineLatest([drives$, companies$, batches$]).subscribe(([placements, companies, batches]) => {
+      let allDrives: Drive[] = [];
+      const placementsList = extractDataArray(placements);
+      const companiesList = extractDataArray(companies);
+      const batchesList = extractDataArray(batches);
+
+      if (placementsList && placementsList.length > 0) {
+        placementsList.forEach(p => {
+          const mappedDrives = mapBackendToDrives(p);
+          // Map location from company collection
+          mappedDrives.forEach(drive => {
+            const company = companiesList.find((c: any) => 
+              c.companyCode_PlacementCompany_Text === drive.companyId || 
+              c._id === drive.companyId ||
+              (c.companyName_PlacementCompany_Text && drive.company && c.companyName_PlacementCompany_Text.toLowerCase() === drive.company.toLowerCase()) ||
+              (c.companyName && drive.company && c.companyName.toLowerCase() === drive.company.toLowerCase())
+            );
+            if (company && company.companyAddress_PlacementCompany_Text) {
+              drive.location = company.companyAddress_PlacementCompany_Text;
+            } else if (company && company.companyAddress) {
+              drive.location = company.companyAddress;
+            }
+
+            // Map batchCode - batchName
+            if (drive.courses) {
+              const codes = drive.courses.split(',').map((c: string) => c.trim());
+              const mappedCodes = codes.map((code: string) => {
+                let batch = batchesList.find((b: any) => 
+                  (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) || 
+                  (b.batchCode && b.batchCode.toLowerCase() === code.toLowerCase()) ||
+                  (b.batchName_PlacementBatches_Text && b.batchName_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) ||
+                  (b.batchName && b.batchName.toLowerCase() === code.toLowerCase())
+                );
+
+                if (!batch) {
+                  // Fallback to partial match if exact match fails
+                  batch = batchesList.find((b: any) => 
+                    (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase().includes(code.toLowerCase())) || 
+                    (b.batchCode && b.batchCode.toLowerCase().includes(code.toLowerCase()))
+                  );
+                }
+
+                if (batch) {
+                  const bCode = batch.batchCode_PlacementBatches_Text || batch.batchCode;
+                  const bName = batch.batchName_PlacementBatches_Text || batch.batchName;
+                  return `${bCode} - ${bName}`;
+                }
+                return code;
+              });
+              drive.courses = mappedCodes.join(', ');
+              drive.eligibleBatches = drive.courses;
+            }
+          });
+          allDrives = allDrives.concat(mappedDrives);
+        });
+      }
+      this.drivesSubject.next(allDrives);
+      this.cdr.detectChanges();
+    });
+
+    // Fetch Applications
+    this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-applications`).subscribe(apps => {
+      const appsList = extractDataArray(apps);
+      const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
+      this.applicationsSubject.next(userApps);
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    });
   }
 
   public getFilteredDrives(drives: Drive[] | null): Drive[] {
@@ -129,6 +231,11 @@ export class DrivesComponent implements OnInit {
   }
 
   public showApplyFilePreview(file: File): void {
+      if (!this.selectedDrive || !this.profileSubject.value) return;
+      if (!checkEligibility(this.selectedDrive, this.profileSubject.value).eligible) {
+        alert('You are no longer eligible to apply for this drive.');
+        return;
+      }
     if (file.type !== 'application/pdf') {
       alert('Please upload a PDF file.');
       return;
@@ -192,30 +299,7 @@ export class DrivesComponent implements OnInit {
     }
   }
 
-  public checkEligibility(drive: Drive, profile: Profile): { eligible: boolean; reason?: string } {
-    if (profile.freeze) {
-      return { eligible: false, reason: 'Your placement profile is currently frozen' };
-    }
-    if (!profile.placementOptIn && !profile.optedIn) {
-      return { eligible: false, reason: 'You have not opted-in for placements' };
-    }
-    const studentCGPA = parseFloat(profile.cgpa);
-    if (studentCGPA < drive.minCGPA) {
-      return { eligible: false, reason: `CGPA criteria not met (Min required: ${drive.minCGPA}, Your CGPA: ${profile.cgpa})` };
-    }
-    if (!drive.allowBacklog && profile.backlogs > 0) {
-      return { eligible: false, reason: `Backlogs not allowed (You have ${profile.backlogs} backlog)` };
-    }
-    if (drive.eligibleBatches && profile.batchCode) {
-      const eligibleList = drive.eligibleBatches.split(',').map(b => b.trim());
-      if (!eligibleList.includes(profile.batchCode)) {
-        return { eligible: false, reason: `Your batch (${profile.batchCode}) is not eligible for this drive` };
-      }
-    }
-    return { eligible: true };
-  }
-
-  public hasApplied(drive: Drive, applications: Application[] | null): boolean {
+    public hasApplied(drive: Drive, applications: Application[] | null): boolean {
     if (!applications) return false;
     return applications.some(app =>
       app.jobId === drive.jobId ||
@@ -231,9 +315,69 @@ export class DrivesComponent implements OnInit {
       fieldId: key,
       answer: String(this.answeredQuestions[key])
     }));
-    this.sharedStateService.addApplication(this.selectedDrive, formAnswers);
-    this.toastService.success(`Applied to ${this.selectedDrive.company} – ${this.selectedDrive.title}!`);
-    this.closeApply();
-    this.goBackToList();
+
+    const profile = this.profileSubject.value;
+    const now = new Date();
+    const formattedDate = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+
+    let resumeDocument: any = null;
+    if (this.resumeSource === 'default' && profile && profile.resumeUploaded) {
+      resumeDocument = {
+        resumeUploaded: profile.resumeUploaded,
+        resumeFileName: profile.resumeFileName,
+        resumeFileSize: profile.resumeFileSize,
+        resumeUrl: profile.resumeUrl
+      };
+    } else if (this.resumeSource === 'upload' && this.uploadedResumeFile) {
+      resumeDocument = {
+        resumeUploaded: true,
+        resumeFileName: this.uploadedResumeFileName,
+        resumeFileSize: this.uploadedResumeFileSize,
+        resumeUrl: null
+      };
+    }
+
+    const newApp = {
+      studentId: this.currentStudentId,
+      rollNo: profile?.rollNo || '',
+      studentName: profile?.name || '',
+      placementId: this.selectedDrive.placementId,
+      jobId: this.selectedDrive.jobId,
+      companyCode: this.selectedDrive.companyId,
+      companyName: this.selectedDrive.company,
+      appliedDate: formattedDate,
+      status: 'In Progress',
+      resumeUrl: resumeDocument?.resumeUrl || resumeDocument?.resumeFileName || '',
+
+      studentId_PlacementAppilcation_Text: this.currentStudentId,
+      rollNo_PlacementAppilcation_Text: profile?.rollNo || '',
+      studentName_PlacementAppilcation_Text: profile?.name || '',
+      placementId_PlacementAppilcation_Text: this.selectedDrive.placementId,
+      jobId_PlacementAppilcation_Text: this.selectedDrive.jobId,
+      companyCode_PlacementAppilcation_Text: this.selectedDrive.companyId,
+      companyName_PlacementAppilcation_Text: this.selectedDrive.company,
+      appiliedDate_PlacementAppilcation_Date: formattedDate,
+      status_PlacementAppilcation_Text: 'In Progress',
+      resumeUrl_PlacementAppilcation_Document: resumeDocument,
+      formAnswers_PlacementAppilcation_DocumentArray: formAnswers.map(f => ({
+         answerId_PlacementAppilcation_Text: f.answerId,
+         fieldId_PlacementAppilcation_Text: f.fieldId,
+         answer_PlacementAppilcation_Text: f.answer
+      }))
+    };
+
+    this.http.post(`${environment.baseUrl}/placements-app/create-applications`, newApp).subscribe(() => {
+      this.toastService.success(`Applied to ${this.selectedDrive!.company} – ${this.selectedDrive!.title}!`);
+      
+      // Refresh applications list
+      this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-applications`).subscribe(apps => {
+        const appsList = extractDataArray(apps);
+        const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
+        this.applicationsSubject.next(userApps);
+      });
+
+      this.closeApply();
+      this.goBackToList();
+    });
   }
 }

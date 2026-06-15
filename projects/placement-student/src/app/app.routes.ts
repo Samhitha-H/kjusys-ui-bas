@@ -5,16 +5,16 @@ import { NavigationComponent } from './modules/navigation/navigation.component';
 export const APP_ROUTES: Routes = [
   {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'kjusys/dashboard',
     pathMatch: 'full',
   },
-  {
-    path: 'login',
-    component: SharedAuthComponent,
-    data: {
-      module: 'placement-student',
-    },
-  },
+  // {
+  //   path: 'login',
+  //   component: SharedAuthComponent,
+  //   data: {
+  //     module: 'placement-student',
+  //   },
+  // },
   {
     path: 'kjusys',
     component: NavigationComponent,

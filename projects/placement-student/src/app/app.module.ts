@@ -26,13 +26,13 @@ import { LeftMenuLibModule } from '@libs/left-menu-lib';
       provide: LocationStrategy,
       useClass: HashLocationStrategy
     },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CommonHttpInterceptor,
-      multi: true,
-    },
-    AuthService,
-    AuthGuard,
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: CommonHttpInterceptor,
+    //   multi: true,
+    // },
+    // AuthService,
+    // AuthGuard,
     CookieService,
     SharedToastService
   ],
