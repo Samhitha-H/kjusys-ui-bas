@@ -29,6 +29,9 @@ export interface Profile {
   resumeFileName: string | null;
   resumeFileSize: string | null;
   resumeUrl?: string | null;
+  offerLetterUploaded?: boolean;
+  offerLetterFileName?: string | null;
+  offerLetterUrl?: string | null;
   isPlaced: boolean;
   placedCompany: string | null;
   placedRole: string | null;
@@ -139,6 +142,20 @@ export const extractDataArray = (obj: any): any[] => {
   return [];
 };
 
+export const safeFormatDate = (rawDate: any): string => {
+  if (!rawDate) return '';
+  try {
+    if (typeof rawDate === 'string' && /^\d{2}-\d{2}-\d{4}$/.test(rawDate)) {
+      const parts = rawDate.split('-');
+      return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).toLocaleDateString();
+    }
+    const d = new Date(rawDate);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString();
+  } catch (e) {
+    return '';
+  }
+};
+
 export const extractDataObject = (obj: any): any => {
   if (!obj) return obj;
   if (obj.responseData?.data?.data) return obj.responseData.data.data;
@@ -193,13 +210,16 @@ export function mapBackendToProfile(data: any): Profile {
     skills: data.skills_PlacementStudent_Text || data.skills || '',
     projects: data.projects_PlacementStudent_Text || data.projects || '',
     achievements: data.studentAchievements_PlacementStudent_Text || data.achievements || '',
-    score10th: data.score10th || '',
-    score12th: data.score12th || '',
+    score10th: data.score10th || data.tenthPer_PlacementStudent_Double?.toString() || data.tenthPercentage?.toString() || '',
+    score12th: data.score12th || data.twelthPer_PlacementStudent_Double?.toString() || data.twelfthPercentage?.toString() || '',
     attendance: data.attendance || '',
     resumeUploaded: parseBool(data.studentResume_PlacementStudent_Document?.resumeUploaded || data.resumeUploaded, false),
     resumeFileName: data.studentResume_PlacementStudent_Document?.resumeFileName || data.resumeFileName || null,
     resumeFileSize: data.studentResume_PlacementStudent_Document?.resumeFileSize || data.resumeFileSize || null,
     resumeUrl: data.studentResume_PlacementStudent_Document?.resumeUrl || data.resumeUrl || null,
+    offerLetterUploaded: parseBool(data.offerLetter_PlacementStudent_Document?.uploaded || data.offerLetter_PlacementStudent_Document?.offerLetterUploaded || false, false),
+    offerLetterFileName: data.offerLetter_PlacementStudent_Document?.fileName || data.offerLetter_PlacementStudent_Document?.offerLetterFileName || null,
+    offerLetterUrl: data.offerLetter_PlacementStudent_Document?.fileUrl || data.offerLetter_PlacementStudent_Document?.offerLetterUrl || null,
     isPlaced: parseBool(data.isPlaced, false),
     placedCompany: data.placedCompany || null,
     placedRole: data.placedRole || null,
@@ -286,11 +306,11 @@ export function mapBackendToDrives(data: any): Drive[] {
       location: job.location || '',
       minAggregate: job.minCgpa_PlacementDrive_Double ? job.minCgpa_PlacementDrive_Double.toString() : (job.minCgpa ? job.minCgpa.toString() : (job.minAggregate || '0')),
       minCGPA: job.minCgpa_PlacementDrive_Double || job.minCgpa || job.minCGPA || 0,
-      deadline: driveEnd ? new Date(driveEnd).toLocaleDateString() : '',
+      deadline: safeFormatDate(driveEnd),
       type: job.employmentType_PlacementDrive_Text || job.employmentType || job.type || '',
       stipend: job.stipend || '',
-      appOpens: driveStart ? new Date(driveStart).toLocaleDateString() : '',
-      appCloses: driveEnd ? new Date(driveEnd).toLocaleDateString() : '',
+      appOpens: safeFormatDate(driveStart),
+      appCloses: safeFormatDate(driveEnd),
       backlogs: (job.allowBacklog_PlacementDrive_Bool || job.allowBacklog) ? 'Allowed' : 'Not Allowed',
       allowBacklog: job.allowBacklog_PlacementDrive_Bool || job.allowBacklog || false,
       courses: globalBatches,
@@ -315,7 +335,7 @@ export function mapBackendToApplication(data: any): Application {
   }));
 
   const appliedDateRaw = data.appliedDate || data.appiliedDate_PlacementAppilcation_Date || data.dateApplied;
-  const appliedDate = appliedDateRaw ? new Date(appliedDateRaw).toLocaleDateString() : '';
+  const appliedDate = safeFormatDate(appliedDateRaw);
 
   let extractedStudentId = data.studentId || data.studentId_PlacementAppilcation_Text || data.userId || '';
   if (data.student && typeof data.student === 'object') {
@@ -399,6 +419,11 @@ export class DashboardComponent implements OnInit {
       next: prof => {
         this.profileSubject.next(prof);
         this.editForm = { ...prof };
+        this.offerLetterSubject.next({
+          uploaded: prof.offerLetterUploaded || false,
+          fileName: prof.offerLetterFileName || null,
+          fileUrl: prof.offerLetterUrl || null
+        });
         this.cdr.detectChanges();
       },
       error: err => {
@@ -421,7 +446,12 @@ export class DashboardComponent implements OnInit {
       const companiesList = extractDataArray(companies);
       const batchesList = extractDataArray(batches);
 
-      // 1. Process Drives (Placements Collection)
+      // 1. Process Applications & map Role/LPA from Drives (Do this first so userApps is available for hasApplied)
+      const appsList = extractDataArray(apps);
+      const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => 
+        String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
+
+      // 2. Process Drives (Placements Collection)
       let allDrives: Drive[] = [];
       const placementsList = extractDataArray(placements);
       if (placementsList && placementsList.length > 0) {
@@ -474,10 +504,19 @@ export class DashboardComponent implements OnInit {
           allDrives = allDrives.concat(mappedDrives);
         });
       }
-      if (allDrives.length > 0) {
-        const appsList = extractDataArray(apps);
-        const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
 
+      // Map Role/LPA from Drives to Applications now that allDrives is populated
+      userApps.forEach(app => {
+        // Map using jobId or placementId
+        const linkedDrive = allDrives.find(d => String(d.jobId) === String(app.jobId) || String(d.placementId) === String(app.placementId));
+        if (linkedDrive) {
+          app.title = linkedDrive.title || app.title;
+          app.lpa = linkedDrive.lpa || app.lpa;
+          app.company = linkedDrive.company || app.company;
+        }
+      });
+
+      if (allDrives.length > 0) {
         const hasApplied = (drive: Drive) => {
           return userApps.some(app => 
             String(app.jobId) === String(drive.jobId) || 
@@ -500,22 +539,10 @@ export class DashboardComponent implements OnInit {
         this.remindersSubject.next(upcomingReminders);
       }
 
-      // 2. Process Applications & map Role/LPA from Drives
-      const appsList = extractDataArray(apps);
-      const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
-
-      userApps.forEach(app => {
-        // Map using jobId or placementId
-        const linkedDrive = allDrives.find(d => String(d.jobId) === String(app.jobId) || String(d.placementId) === String(app.placementId));
-        if (linkedDrive) {
-          app.title = linkedDrive.title || app.title;
-          app.lpa = linkedDrive.lpa || app.lpa;
-          app.company = linkedDrive.company || app.company;
-        }
-      });
-
       this.applicationsSubject.next(userApps);
-      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
 
       // 3. Derive Placement Status from Applications
       const selectedApp = userApps.find(a => a.status === 'Selected' || a.status === 'Placed' || a.status?.toLowerCase() === 'selected' || a.status?.toLowerCase() === 'placed');
@@ -544,7 +571,10 @@ export class DashboardComponent implements OnInit {
 
   public getActiveApplicationsCount(apps: Application[] | null): number {
     if (!apps) return 0;
-    return apps.filter(a => a.status === 'In Progress' || a.status === 'Selected').length;
+    return apps.filter(a => {
+      const s = (a.status || '').toLowerCase();
+      return s === 'applied' || s === 'in progress' || s === 'selected' || s === 'on hold';
+    }).length;
   }
 
   public triggerOfferLetterUpload(): void {
@@ -565,6 +595,18 @@ export class DashboardComponent implements OnInit {
       }
       const fileUrl = URL.createObjectURL(file);
       this.offerLetterSubject.next({ uploaded: true, fileName: file.name, fileUrl });
+      
+      const payload = {
+        offerLetter_PlacementStudent_Document: {
+          uploaded: true,
+          fileName: file.name,
+          fileSize: file.size,
+          fileUrl: fileUrl
+        }
+      };
+      this.http.put(`${environment.baseUrl}/placements-app/update-student/${this.currentStudentId}`, payload).subscribe(() => {
+        this.toastService.success('Offer letter successfully saved!');
+      });
     }
   }
 
@@ -583,6 +625,18 @@ export class DashboardComponent implements OnInit {
     if (fileInput) {
       fileInput.value = '';
     }
+    
+    const payload = {
+      offerLetter_PlacementStudent_Document: {
+        uploaded: false,
+        fileName: null,
+        fileSize: null,
+        fileUrl: null
+      }
+    };
+    this.http.put(`${environment.baseUrl}/placements-app/update-student/${this.currentStudentId}`, payload).subscribe(() => {
+      this.toastService.success('Offer letter removed!');
+    });
   }
 
   public goToAllDrives(): void {

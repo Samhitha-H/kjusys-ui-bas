@@ -359,6 +359,20 @@ export class DrivesComponent implements OnInit {
       appiliedDate_PlacementAppilcation_Date: formattedDate,
       status_PlacementAppilcation_Text: 'In Progress',
       resumeUrl_PlacementAppilcation_Document: resumeDocument,
+      
+      phone_PlacementAppilcation_Long: profile?.phone ? Number(profile.phone) : null,
+      linkedin_PlacementAppilcation_Text: profile?.linkedin || '',
+      github_PlacementAppilcation_Text: profile?.github || '',
+      skills_PlacementAppilcation_Text: profile?.skills || '',
+      studentAchievements_PlacementAppilcation_Text: profile?.achievements || '',
+      projects_PlacementAppilcation_Text: profile?.projects || '',
+      internshipDetails_PlacementAppilcation_DocumentArray: (profile?.internshipDetails || []).map(i => ({
+        internCompanyName_PlacementAppilcation_Text: i.companyName,
+        duration_PlacementAppilcation_Text: i.duration,
+        location_PlacementAppilcation_Text: i.location,
+        jobType_PlacementAppilcation_Text: i.jobType
+      })),
+
       formAnswers_PlacementAppilcation_DocumentArray: formAnswers.map(f => ({
          answerId_PlacementAppilcation_Text: f.answerId,
          fieldId_PlacementAppilcation_Text: f.fieldId,
