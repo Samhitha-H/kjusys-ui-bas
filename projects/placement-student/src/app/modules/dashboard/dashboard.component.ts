@@ -46,6 +46,7 @@ export interface Profile {
   freeze: boolean;
   active?: boolean;
   optedIn?: boolean;
+  optedInStatus: string;
   batchCode: string;
   internshipDetails?: Array<{
     companyName: string;
@@ -201,6 +202,7 @@ export function mapBackendToProfile(data: any): Profile {
     email: data.email_PlacementStudent_Text || data.email || '',
     batchCode: data.batchCode_PlacementStudent_Text || data.batchCode || '',
     optedIn: parseBool(data.optedIn_PlacementStudent_Bool, parseBool(data.optedIn, false)),
+    optedInStatus: data.optInStatus || (data.optedIn === true || data.optedIn_PlacementStudent_Bool === true ? 'opted_in' : (data.optedIn === false || data.optedIn_PlacementStudent_Bool === false ? 'opted_out' : 'pending')),
     placementOptIn: parseBool(data.optedIn_PlacementStudent_Bool, parseBool(data.optedIn, parseBool(data.placementOptIn, false))),
     cgpa: data.cgpa_PlacementStudent_Double ? data.cgpa_PlacementStudent_Double.toString() : (data.cgpa ? data.cgpa.toString() : '0'),
     course: data.specialization_PlacementStudent_Text || data.specialization || data.course || '',
@@ -212,11 +214,11 @@ export function mapBackendToProfile(data: any): Profile {
     achievements: data.studentAchievements_PlacementStudent_Text || data.achievements || '',
     score10th: data.score10th || data.tenthPer_PlacementStudent_Double?.toString() || data.tenthPercentage?.toString() || '',
     score12th: data.score12th || data.twelthPer_PlacementStudent_Double?.toString() || data.twelfthPercentage?.toString() || '',
-    attendance: data.attendance || '',
-    resumeUploaded: parseBool(data.studentResume_PlacementStudent_Document?.resumeUploaded || data.resumeUploaded, false),
-    resumeFileName: data.studentResume_PlacementStudent_Document?.resumeFileName || data.resumeFileName || null,
-    resumeFileSize: data.studentResume_PlacementStudent_Document?.resumeFileSize || data.resumeFileSize || null,
-    resumeUrl: data.studentResume_PlacementStudent_Document?.resumeUrl || data.resumeUrl || null,
+    attendance: data.attendance_PlacementStudent_Text || data.attendance || '',
+    resumeUploaded: !!data.studentResume_PlacementStudent_Text || parseBool(data.resumeUploaded, false),
+    resumeFileName: data.studentResume_PlacementStudent_Text || data.resumeFileName || null,
+    resumeFileSize: data.resumeFileSize || null,
+    resumeUrl: data.resumeUrl || null,
     offerLetterUploaded: parseBool(data.offerLetter_PlacementStudent_Document?.uploaded || data.offerLetter_PlacementStudent_Document?.offerLetterUploaded || false, false),
     offerLetterFileName: data.offerLetter_PlacementStudent_Document?.fileName || data.offerLetter_PlacementStudent_Document?.offerLetterFileName || null,
     offerLetterUrl: data.offerLetter_PlacementStudent_Document?.fileUrl || data.offerLetter_PlacementStudent_Document?.offerLetterUrl || null,
@@ -227,12 +229,23 @@ export function mapBackendToProfile(data: any): Profile {
     backlogs: data.backlogs_PlacementStudent_Int !== undefined ? data.backlogs_PlacementStudent_Int : (data.backlogs !== undefined ? parseInt(data.backlogs, 10) : 0),
     freeze: parseBool(data.freeze_PlacementStudent_Bool, parseBool(data.freeze, false)),
     active: parseBool(data.active_PlacementStudent_Bool, parseBool(data.active, false)),
-    internshipDetails: extractDataArray(data.internshipDetails_PlacementStudent_DocumentArray || data.internshipDetails || []).map(i => ({
-      companyName: i.companyName_PlacementStudent_Text || i.companyName || '',
-      location: i.location_PlacementStudent_Text || i.location || '',
-      jobType: i.jobType_PlacementStudent_Text || i.jobType || '',
-      duration: i.duration_PlacementStudent_Text || i.duration || ''
-    }))
+    internshipDetails: (() => {
+      const arr = extractDataArray(data.internshipDetails_PlacementStudent_DocumentArray || data.internshipDetails || []).map(i => ({
+        companyName: i.companyName_PlacementStudent_Text || i.companyName || '',
+        location: i.location_PlacementStudent_Text || i.location || '',
+        jobType: i.jobType_PlacementStudent_Text || i.jobType || '',
+        duration: i.duration_PlacementStudent_Text || i.duration || ''
+      }));
+      if (arr.length === 0 && (data.experienceCompany_PlacementStudent_Text || data.experienceMonths_PlacementStudent_Int)) {
+        arr.push({
+          companyName: data.experienceCompany_PlacementStudent_Text || '',
+          location: '',
+          jobType: 'Work from Office',
+          duration: data.experienceMonths_PlacementStudent_Int ? data.experienceMonths_PlacementStudent_Int.toString() : ''
+        });
+      }
+      return arr;
+    })()
   };
 }
 
@@ -273,17 +286,18 @@ export function mapBackendToDrives(data: any): Drive[] {
   const globalBatches = data.batchCode_PlacementDrive_Text || data.batchCode || data.eligibleBatches || '';
 
   const jobs = data.jobs_PlacementDrive_DocumentArray || data.jobs || (data.jobId ? [data] : []);
-  const fields = data.fields_PlacementDrive_DocumentArray || data.fields || data.additionalQuestions || [];
-
-  const parsedFields = fields.map((f: any) => ({
-    fieldId: f.fieldId_PlacementDrive_Text || f.fieldId,
-    label: f.label_PlacementDrive_Text || f.label,
-    fieldType: f.fieldType_PlacementDrive_Text || f.fieldType,
-    required: f.required_PlacementDrive_Bool || f.required || false,
-    options: f.options || []
-  }));
+  const rootFields = data.fields_PlacementDrive_DocumentArray || data.fields || data.additionalQuestions || [];
 
   for (const job of jobs) {
+    const jobFields = job.fields_PlacementDrive_DocumentArray || job.fields || job.additionalQuestions || rootFields;
+    const parsedFields = jobFields.map((f: any) => ({
+      fieldId: f.fieldId_PlacementDrive_Text || f.fieldId,
+      label: f.label_PlacementDrive_Text || f.label,
+      fieldType: f.fieldType_PlacementDrive_Text || f.fieldType,
+      required: f.required_PlacementDrive_Bool || f.required || false,
+      options: f.options_PlacementDrive_TextArray || f.options || []
+    }));
+
     let eligibleBatches = '';
     if (job.eligibleBatches_PlacementDrive_TextArray && Array.isArray(job.eligibleBatches_PlacementDrive_TextArray)) {
       eligibleBatches = job.eligibleBatches_PlacementDrive_TextArray.join(', ');
@@ -359,7 +373,11 @@ export function mapBackendToApplication(data: any): Application {
     appliedDate: appliedDate,
     dateApplied: appliedDate,
     lpa: data.lpa || 0,
-    status: data.status || data.status_PlacementAppilcation_Text || 'Applied',
+    status: (() => {
+      let s = data.status || data.status_PlacementAppilcation_Text || 'Applied';
+      if (s === 'Applied') return 'In Progress';
+      return s;
+    })(),
     resumeUrl: data.resumeUrl || '',
     formAnswers: formAnswers
   };
@@ -375,7 +393,7 @@ export function mapBackendToApplication(data: any): Application {
 export class DashboardComponent implements OnInit {
   private profileSubject = new BehaviorSubject<Profile | null>(null);
   public profile$ = this.profileSubject.asObservable();
-  
+
   private applicationsSubject = new BehaviorSubject<Application[]>([]);
   public applications$ = this.applicationsSubject.asObservable();
 
@@ -392,14 +410,62 @@ export class DashboardComponent implements OnInit {
 
   // Add dummy observables so template doesn't crash if it looks for student switcher
   public students$: Observable<Profile[]> = new BehaviorSubject([]);
-  public activeStudentId$: Observable<string> = new BehaviorSubject('6a2b808f2cfa1b3892b73335');
+  public activeStudentId$: Observable<string> = new BehaviorSubject('6a2b80a72cfa1b3892b73336');
 
   // Edit profile form state
   public editForm: Partial<Profile> = {};
   public showRemoveResumeModal = false;
   public resumeDragOver = false;
 
-  private currentStudentId = '6a2b808f2cfa1b3892b73335'; // Mock active user ID
+  // New Form variables
+  public currentStep = 1;
+  public totalSteps = 1;
+  public showSuccessModal = false;
+
+  public registrationForm: any = {
+    optingFor: '',
+    termsGuidelines: false,
+    termsAccuracy: false,
+    termsAttendance: false,
+    termsDisqualification: false,
+    personalEmail: '',
+    mobileNumber: '',
+    altMobileNumber: '',
+    panCard: '',
+    aadharCard: '',
+    drivingLicense: '',
+    bloodGroup: '',
+    fatherName: '',
+    fatherOccupation: '',
+    presentAddress: '',
+    permanentAddress: '',
+    sslcInstitution: '',
+    sslcLocation: '',
+    sslcPercentage: null,
+    puInstitution: '',
+    puLocation: '',
+    puPercentage: null,
+    degreeInstitution: '',
+    degreeLocation: '',
+    degreePercentage: null,
+    degreeBacklogs: 'no',
+    degreeBacklogsCount: null,
+    pgInstitution: '',
+    pgPercentage: null,
+    pgBacklogs: 'no',
+    pgBacklogsCount: null,
+    hasInternships: '',
+    hasExperience: '',
+    experienceCompany: '',
+    experienceMonths: null,
+    attendancePercentage: null,
+    willAdhereCecr: false,
+    declarationFile: null,
+    resumeFile: null
+  };
+
+  private currentStudentId = '6a2b80a72cfa1b3892b73336'; // Mock active user ID
+  public declarationFileUrl: string = '';
 
   constructor(
     private http: HttpClient,
@@ -407,10 +473,21 @@ export class DashboardComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.profileModalOpenSubject.next(false);
+
+    // Fetch Declarations
+    this.http.get<any>(`${environment.baseUrl}/placements-app/list-declarations`).subscribe({
+      next: (res) => {
+        if (res && res.data && res.data.length > 0) {
+          const firstDeclaration = res.data[0];
+          this.declarationFileUrl = firstDeclaration.declarationForm_PlacementDeclare_Text || '';
+        }
+      },
+      error: (err) => console.error('Failed to fetch declarations', err)
+    });
 
     // Fetch Profile
     this.http.get<any>(`${environment.baseUrl}/placements-app/get-student/${this.currentStudentId}`).pipe(
@@ -448,7 +525,7 @@ export class DashboardComponent implements OnInit {
 
       // 1. Process Applications & map Role/LPA from Drives (Do this first so userApps is available for hasApplied)
       const appsList = extractDataArray(apps);
-      const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) => 
+      const userApps = appsList.map(a => mapBackendToApplication(a)).filter((a: Application) =>
         String(a.studentId).toLowerCase() === String(this.currentStudentId).toLowerCase());
 
       // 2. Process Drives (Placements Collection)
@@ -459,8 +536,8 @@ export class DashboardComponent implements OnInit {
           const mappedDrives = mapBackendToDrives(p);
           // Map location from company collection
           mappedDrives.forEach(drive => {
-            const company = companiesList.find((c: any) => 
-              c.companyCode_PlacementCompany_Text === drive.companyId || 
+            const company = companiesList.find((c: any) =>
+              c.companyCode_PlacementCompany_Text === drive.companyId ||
               c._id === drive.companyId ||
               (c.companyName_PlacementCompany_Text && drive.company && c.companyName_PlacementCompany_Text.toLowerCase() === drive.company.toLowerCase()) ||
               (c.companyName && drive.company && c.companyName.toLowerCase() === drive.company.toLowerCase())
@@ -475,8 +552,8 @@ export class DashboardComponent implements OnInit {
             if (drive.courses) {
               const codes = drive.courses.split(',').map((c: string) => c.trim());
               const mappedCodes = codes.map((code: string) => {
-                let batch = batchesList.find((b: any) => 
-                  (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) || 
+                let batch = batchesList.find((b: any) =>
+                  (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) ||
                   (b.batchCode && b.batchCode.toLowerCase() === code.toLowerCase()) ||
                   (b.batchName_PlacementBatches_Text && b.batchName_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) ||
                   (b.batchName && b.batchName.toLowerCase() === code.toLowerCase())
@@ -484,8 +561,8 @@ export class DashboardComponent implements OnInit {
 
                 if (!batch) {
                   // Fallback to partial match if exact match fails
-                  batch = batchesList.find((b: any) => 
-                    (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase().includes(code.toLowerCase())) || 
+                  batch = batchesList.find((b: any) =>
+                    (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase().includes(code.toLowerCase())) ||
                     (b.batchCode && b.batchCode.toLowerCase().includes(code.toLowerCase()))
                   );
                 }
@@ -518,8 +595,8 @@ export class DashboardComponent implements OnInit {
 
       if (allDrives.length > 0) {
         const hasApplied = (drive: Drive) => {
-          return userApps.some(app => 
-            String(app.jobId) === String(drive.jobId) || 
+          return userApps.some(app =>
+            String(app.jobId) === String(drive.jobId) ||
             (app.company.toLowerCase() === drive.company.toLowerCase() && app.title.toLowerCase() === drive.title.toLowerCase())
           );
         };
@@ -547,7 +624,7 @@ export class DashboardComponent implements OnInit {
       // 3. Derive Placement Status from Applications
       const selectedApp = userApps.find(a => a.status === 'Selected' || a.status === 'Placed' || a.status?.toLowerCase() === 'selected' || a.status?.toLowerCase() === 'placed');
       const currentProfile = this.profileSubject.value || mapBackendToProfile({ _id: this.currentStudentId });
-      
+
       if (selectedApp) {
         this.profileSubject.next({
           ...currentProfile,
@@ -595,7 +672,7 @@ export class DashboardComponent implements OnInit {
       }
       const fileUrl = URL.createObjectURL(file);
       this.offerLetterSubject.next({ uploaded: true, fileName: file.name, fileUrl });
-      
+
       const payload = {
         offerLetter_PlacementStudent_Document: {
           uploaded: true,
@@ -625,7 +702,7 @@ export class DashboardComponent implements OnInit {
     if (fileInput) {
       fileInput.value = '';
     }
-    
+
     const payload = {
       offerLetter_PlacementStudent_Document: {
         uploaded: false,
@@ -697,12 +774,7 @@ export class DashboardComponent implements OnInit {
         jobType_PlacementStudent_Text: internship.jobType,
         duration_PlacementStudent_Text: internship.duration
       })) || [],
-      studentResume_PlacementStudent_Document: {
-        resumeUploaded: this.editForm.resumeUploaded || false,
-        resumeFileName: this.editForm.resumeFileName || null,
-        resumeFileSize: this.editForm.resumeFileSize || null,
-        resumeUrl: this.editForm.resumeUrl || null
-      }
+      studentResume_PlacementStudent_Text: this.editForm.resumeFileName || null
     };
 
     this.http.put(`${environment.baseUrl}/placements-app/update-student/${this.currentStudentId}`, payload).subscribe(() => {
@@ -786,5 +858,213 @@ export class DashboardComponent implements OnInit {
     const textarea = event.target as HTMLTextAreaElement;
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  // --- REGISTRATION FORM ACTIONS ---
+  public handleOptingForChange(event: any): void {
+    const optingFor = event.target.value;
+    if (optingFor === 'placement') {
+      this.totalSteps = 3;
+    } else {
+      this.totalSteps = 1;
+    }
+  }
+
+  public nextStep(): void {
+    const optingForElement = document.getElementById('optingFor') as HTMLSelectElement;
+    if (this.currentStep === 1 && optingForElement && !optingForElement.value) {
+      this.toastService.error('Please select your placement preference.');
+      return;
+    }
+
+    if (optingForElement && optingForElement.value !== 'placement' && this.currentStep === 1) {
+      this.submitForm();
+      return;
+    }
+
+    if (this.currentStep === this.totalSteps) {
+      this.submitForm();
+      return;
+    }
+
+    if (this.currentStep < this.totalSteps) {
+      this.currentStep++;
+    }
+  }
+
+  public prevStep(): void {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+    }
+  }
+
+  public toggleBacklogs(event: any): void {
+    const val = event.target.value;
+    const countInput = document.getElementById('degreeBacklogsCount') as HTMLInputElement;
+    if (countInput) {
+      if (val === 'yes') {
+        countInput.disabled = false;
+        countInput.required = true;
+      } else {
+        countInput.disabled = true;
+        countInput.required = false;
+        countInput.value = '';
+      }
+    }
+  }
+
+  public togglePGBacklogs(event: any): void {
+    const val = event.target.value;
+    const countInput = document.getElementById('pgBacklogsCount') as HTMLInputElement;
+    if (countInput) {
+      if (val === 'yes') {
+        countInput.disabled = false;
+        countInput.required = true;
+      } else {
+        countInput.disabled = true;
+        countInput.required = false;
+        countInput.value = '';
+      }
+    }
+  }
+
+  public toggleExperience(event: any): void {
+    const val = event.target.value;
+    const expGroup = document.getElementById('experienceDetailsGroup');
+    if (expGroup) {
+      const inputs = expGroup.querySelectorAll('input');
+      if (val === 'yes') {
+        expGroup.style.display = 'grid'; // Changed to grid as per tailwind grid-cols
+        inputs.forEach(i => i.required = true);
+      } else {
+        expGroup.style.display = 'none';
+        inputs.forEach(i => {
+          i.required = false;
+          i.value = '';
+        });
+      }
+    }
+  }
+
+  public handleDeclarationUpload(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.type === 'application/pdf') {
+        const fileUrl = URL.createObjectURL(file);
+        this.registrationForm.declarationFile = {
+          uploaded: true,
+          fileName: file.name,
+          fileSize: file.size,
+          fileUrl: fileUrl
+        };
+        this.toastService.success(`Signed Declaration "${file.name}" uploaded successfully!`);
+      } else {
+        this.toastService.error('Only PDF files are allowed.');
+        event.target.value = '';
+      }
+    }
+  }
+
+  public handleFormResumeUpload(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+      if (['.pdf', '.doc', '.docx'].includes(extension)) {
+        const fileUrl = URL.createObjectURL(file);
+        this.registrationForm.resumeFile = {
+          resumeUploaded: true,
+          resumeFileName: file.name,
+          resumeFileSize: file.size,
+          resumeUrl: fileUrl
+        };
+        this.toastService.success(`Resume "${file.name}" uploaded successfully!`);
+      } else {
+        this.toastService.error('Only PDF or Word documents are allowed.');
+        event.target.value = '';
+      }
+    }
+  }
+
+  public submitForm(): void {
+    if (this.registrationForm.optingFor === 'placement' && (!this.registrationForm.termsGuidelines || !this.registrationForm.termsAccuracy || !this.registrationForm.termsAttendance || !this.registrationForm.termsDisqualification || !this.registrationForm.willAdhereCecr)) {
+      this.toastService.error('Please agree to all terms and conditions.');
+      return;
+    }
+
+    const optedInVal = this.registrationForm.optingFor === 'placement' ? 'opted_in' : 'opted_out';
+
+    const isPlacement = this.registrationForm.optingFor === 'placement';
+
+    const payload = {
+      optInStatus: optedInVal,
+      optedIn_PlacementStudent_Bool: isPlacement,
+      email_PlacementStudent_Text: this.registrationForm.personalEmail,
+      phone_PlacementStudent_Long: this.registrationForm.mobileNumber ? parseInt(this.registrationForm.mobileNumber, 10) : null,
+      altPhone_PlacementStudent_Long: this.registrationForm.altMobileNumber ? parseInt(this.registrationForm.altMobileNumber, 10) : null,
+      panCard_PlacementStudent_Text: this.registrationForm.panCard,
+      aadhar_PlacementStudent_Long: this.registrationForm.aadharCard ? parseInt(this.registrationForm.aadharCard, 10) : null,
+      drivingLicense_PlacementStudent_Text: this.registrationForm.drivingLicense,
+      bloodGroup_PlacementStudent_Text: this.registrationForm.bloodGroup,
+      fatherName_PlacementStudent_Text: this.registrationForm.fatherName,
+      fatherOccupation_PlacementStudent_Text: this.registrationForm.fatherOccupation,
+      presentAddress_PlacementStudent_Text: this.registrationForm.presentAddress,
+      permanentAddress_PlacementStudent_Text: this.registrationForm.permanentAddress,
+      tenthInstitution_PlacementStudent_Text: this.registrationForm.sslcInstitution,
+      tenthLocation_PlacementStudent_Text: this.registrationForm.sslcLocation,
+      tenthPer_PlacementStudent_Double: this.registrationForm.sslcPercentage ? parseFloat(this.registrationForm.sslcPercentage) : null,
+      twelfthInstitution_PlacementStudent_Text: this.registrationForm.puInstitution,
+      twelfthLocation_PlacementStudent_Text: this.registrationForm.puLocation,
+      twelthPer_PlacementStudent_Double: this.registrationForm.puPercentage ? parseFloat(this.registrationForm.puPercentage) : null,
+      degreeInstitution_PlacementStudent_Text: this.registrationForm.degreeInstitution,
+      cgpa_PlacementStudent_Double: this.registrationForm.degreePercentage ? parseFloat(this.registrationForm.degreePercentage) : null,
+      backlogs_PlacementStudent_Int: this.registrationForm.degreeBacklogs === 'yes' ? (this.registrationForm.degreeBacklogsCount ? parseInt(this.registrationForm.degreeBacklogsCount, 10) : 0) : 0,
+      pgInstitution_PlacementStudent_Text: this.registrationForm.pgInstitution,
+      pgPer_PlacementStudent_Double: this.registrationForm.pgPercentage ? parseFloat(this.registrationForm.pgPercentage) : null,
+      pgBacklogs_PlacementStudent_Text: this.registrationForm.pgBacklogs === 'yes' ? (this.registrationForm.pgBacklogsCount ? this.registrationForm.pgBacklogsCount.toString() : '0') : '0',
+      attendance_PlacementStudent_Text: this.registrationForm.attendancePercentage ? this.registrationForm.attendancePercentage.toString() : null,
+      hasExperience_PlacementStudent_Bool: this.registrationForm.hasExperience === 'yes',
+      experienceCompany_PlacementStudent_Text: this.registrationForm.experienceCompany || null,
+      experienceMonths_PlacementStudent_Int: this.registrationForm.experienceMonths ? parseInt(this.registrationForm.experienceMonths.toString(), 10) : null,
+      declaration_PlacementStudent_Text: this.registrationForm.declarationFile?.fileName || null,
+      studentResume_PlacementStudent_Text: this.registrationForm.resumeFile?.resumeFileName || this.registrationForm.resumeFile?.fileName || null
+    };
+
+    this.http.put(`${environment.baseUrl}/placements-app/update-student/${this.currentStudentId}`, payload).subscribe({
+      next: () => {
+        this.toastService.success('Registration submitted successfully!');
+        this.showSuccessModal = true;
+
+        const current = this.profileSubject.value;
+        if (current) {
+          this.profileSubject.next({ ...current, optedInStatus: optedInVal, optedIn: optedInVal === 'opted_in' });
+        }
+      },
+      error: (err) => {
+        console.error('Failed to submit registration:', err);
+        this.toastService.error('Failed to submit registration.');
+      }
+    });
+  }
+
+  public closeModal(): void {
+    this.showSuccessModal = false;
+    this.currentStep = 1;
+    this.totalSteps = 1;
+    const optingFor = document.getElementById('optingFor') as HTMLSelectElement;
+    if (optingFor) optingFor.value = '';
+    const form = document.getElementById('wizardForm') as HTMLFormElement;
+    if (form) form.reset();
+  }
+
+  public getNextButtonText(): string {
+    const optingFor = document.getElementById('optingFor') as HTMLSelectElement;
+    const val = optingFor ? optingFor.value : '';
+    if (val && val !== 'placement' && this.currentStep === 1) {
+      return 'Submit Registration ✓';
+    } else if (val === 'placement') {
+      return this.currentStep === this.totalSteps ? 'Submit Registration ✓' : 'Next →';
+    } else {
+      return 'Next →';
+    }
   }
 }

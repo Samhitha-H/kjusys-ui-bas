@@ -526,3 +526,69 @@
     width: 100% !important;
   }
 }
+
+/* FORM HTML STYLES */
+.bg-nav { background-color: #1a233a !important; }
+.text-primary { color: #1967d2 !important; }
+.bg-primary { background-color: #1967d2 !important; }
+.border-primary { border-color: #1967d2 !important; }
+.focus\:border-primary:focus { border-color: #1967d2 !important; }
+.hover\:bg-primaryHover:hover { background-color: #1557b0 !important; }
+.text-sectionTitle { color: #3b5998 !important; }
+.bg-inputBg { background-color: #f8fafc !important; }
+.accent-primary { accent-color: #1967d2 !important; }
+
+.section-divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0 2rem 0;
+}
+.section-divider::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #e2e8f0;
+    z-index: 0;
+}
+.section-divider span {
+    position: relative;
+    z-index: 1;
+    background-color: white;
+    padding: 0 1rem;
+}
+
+.step-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+.step-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tailwind Polyfills for placement-student app (classes purged by shell) */
+.max-w-5xl { max-width: 64rem !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.rounded-xl { border-radius: 0.75rem !important; }
+.rounded-full { border-radius: 9999px !important; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; }
+.border-slate-200 { border-color: #e2e8f0 !important; }
+.border-slate-100 { border-color: #f1f5f9 !important; }
+.overflow-hidden { overflow: hidden !important; }
+.bg-gray-100 { background-color: #f3f4f6 !important; }
+.text-\[13px\] { font-size: 13px !important; }
+.text-\[11px\] { font-size: 11px !important; }
+.text-\[10px\] { font-size: 10px !important; }
+.text-xs { font-size: 0.75rem !important; }
+.text-sm { font-size: 0.875rem !important; }
+.min-h-screen { min-height: 100vh !important; }
+.px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.py-8 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+.bg-slate-50 { background-color: #f8fafc !important; }
+.mb-12 { margin-bottom: 3rem !important; }

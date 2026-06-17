@@ -39,7 +39,7 @@ export class DrivesComponent implements OnInit {
   public answeredQuestions: { [id: string]: any } = {};
   public currentQuestions: any[] = [];
 
-  private currentStudentId = '6a2b808f2cfa1b3892b73335';
+  private currentStudentId = '6a2b80a72cfa1b3892b73336';
 
   constructor(
     private http: HttpClient,
@@ -51,7 +51,7 @@ export class DrivesComponent implements OnInit {
       map(p => p as Profile)
     );
     this.drives$ = combineLatest([
-      this.drivesSubject.asObservable(), 
+      this.drivesSubject.asObservable(),
       this.profileSubject.asObservable(),
       this.applicationsSubject.asObservable()
     ]).pipe(
@@ -88,8 +88,8 @@ export class DrivesComponent implements OnInit {
           const mappedDrives = mapBackendToDrives(p);
           // Map location from company collection
           mappedDrives.forEach(drive => {
-            const company = companiesList.find((c: any) => 
-              c.companyCode_PlacementCompany_Text === drive.companyId || 
+            const company = companiesList.find((c: any) =>
+              c.companyCode_PlacementCompany_Text === drive.companyId ||
               c._id === drive.companyId ||
               (c.companyName_PlacementCompany_Text && drive.company && c.companyName_PlacementCompany_Text.toLowerCase() === drive.company.toLowerCase()) ||
               (c.companyName && drive.company && c.companyName.toLowerCase() === drive.company.toLowerCase())
@@ -104,8 +104,8 @@ export class DrivesComponent implements OnInit {
             if (drive.courses) {
               const codes = drive.courses.split(',').map((c: string) => c.trim());
               const mappedCodes = codes.map((code: string) => {
-                let batch = batchesList.find((b: any) => 
-                  (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) || 
+                let batch = batchesList.find((b: any) =>
+                  (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) ||
                   (b.batchCode && b.batchCode.toLowerCase() === code.toLowerCase()) ||
                   (b.batchName_PlacementBatches_Text && b.batchName_PlacementBatches_Text.toLowerCase() === code.toLowerCase()) ||
                   (b.batchName && b.batchName.toLowerCase() === code.toLowerCase())
@@ -113,8 +113,8 @@ export class DrivesComponent implements OnInit {
 
                 if (!batch) {
                   // Fallback to partial match if exact match fails
-                  batch = batchesList.find((b: any) => 
-                    (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase().includes(code.toLowerCase())) || 
+                  batch = batchesList.find((b: any) =>
+                    (b.batchCode_PlacementBatches_Text && b.batchCode_PlacementBatches_Text.toLowerCase().includes(code.toLowerCase())) ||
                     (b.batchCode && b.batchCode.toLowerCase().includes(code.toLowerCase()))
                   );
                 }
@@ -206,19 +206,26 @@ export class DrivesComponent implements OnInit {
     if (this.selectedDrive) {
       const sourceQuestions = this.selectedDrive.additionalQuestions || this.selectedDrive.fields || [];
       if (sourceQuestions.length > 0) {
-        return sourceQuestions.map(q => ({
-          id: q.fieldId || (q as any).id,
-          type: q.fieldType || (q as any).type,
-          label: q.label,
-          required: q.required,
-          options: q.options
-        }));
+        return sourceQuestions.map(q => {
+          const rawType = (q.fieldType || (q as any).type || '').toLowerCase();
+          let mappedType = 'text';
+          if (rawType.includes('short text')) mappedType = 'text';
+          else if (rawType.includes('long text')) mappedType = 'textarea';
+          else if (rawType.includes('multiple choice')) mappedType = 'dropdown';
+          else if (rawType.includes('checkbox') || rawType.includes('boolean')) mappedType = 'checkbox';
+          else if (rawType.includes('number')) mappedType = 'number';
+
+          return {
+            id: q.fieldId || (q as any).id,
+            type: mappedType,
+            label: q.label,
+            required: q.required,
+            options: q.options
+          };
+        });
       }
     }
-    return [
-      { id: 'gen-q1', type: 'textarea', label: 'Why are you interested in joining ' + (this.selectedDrive ? this.selectedDrive.company : 'this company') + '?', required: true },
-      { id: 'gen-q2', type: 'text', label: 'Any certifications or key projects related to this role?', required: false }
-    ];
+    return [];
   }
 
   public handleApplyFileSelect(event: Event): void {
@@ -231,11 +238,11 @@ export class DrivesComponent implements OnInit {
   }
 
   public showApplyFilePreview(file: File): void {
-      if (!this.selectedDrive || !this.profileSubject.value) return;
-      if (!checkEligibility(this.selectedDrive, this.profileSubject.value).eligible) {
-        alert('You are no longer eligible to apply for this drive.');
-        return;
-      }
+    if (!this.selectedDrive || !this.profileSubject.value) return;
+    if (!checkEligibility(this.selectedDrive, this.profileSubject.value).eligible) {
+      alert('You are no longer eligible to apply for this drive.');
+      return;
+    }
     if (file.type !== 'application/pdf') {
       alert('Please upload a PDF file.');
       return;
@@ -299,7 +306,7 @@ export class DrivesComponent implements OnInit {
     }
   }
 
-    public hasApplied(drive: Drive, applications: Application[] | null): boolean {
+  public hasApplied(drive: Drive, applications: Application[] | null): boolean {
     if (!applications) return false;
     return applications.some(app =>
       app.jobId === drive.jobId ||
@@ -337,18 +344,8 @@ export class DrivesComponent implements OnInit {
       };
     }
 
-    const newApp = {
-      studentId: this.currentStudentId,
-      rollNo: profile?.rollNo || '',
-      studentName: profile?.name || '',
-      placementId: this.selectedDrive.placementId,
-      jobId: this.selectedDrive.jobId,
-      companyCode: this.selectedDrive.companyId,
-      companyName: this.selectedDrive.company,
-      appliedDate: formattedDate,
-      status: 'In Progress',
-      resumeUrl: resumeDocument?.resumeUrl || resumeDocument?.resumeFileName || '',
-
+    const newApp: any = {
+      // Mapped fields using ONLY the new keynames
       studentId_PlacementAppilcation_Text: this.currentStudentId,
       rollNo_PlacementAppilcation_Text: profile?.rollNo || '',
       studentName_PlacementAppilcation_Text: profile?.name || '',
@@ -359,30 +356,51 @@ export class DrivesComponent implements OnInit {
       appiliedDate_PlacementAppilcation_Date: formattedDate,
       status_PlacementAppilcation_Text: 'In Progress',
       resumeUrl_PlacementAppilcation_Document: resumeDocument,
-      
-      phone_PlacementAppilcation_Long: profile?.phone ? Number(profile.phone) : null,
-      linkedin_PlacementAppilcation_Text: profile?.linkedin || '',
-      github_PlacementAppilcation_Text: profile?.github || '',
-      skills_PlacementAppilcation_Text: profile?.skills || '',
-      studentAchievements_PlacementAppilcation_Text: profile?.achievements || '',
-      projects_PlacementAppilcation_Text: profile?.projects || '',
-      internshipDetails_PlacementAppilcation_DocumentArray: (profile?.internshipDetails || []).map(i => ({
+
+      formAnswers_PlacementAppilcation_DocumentArray: formAnswers.map(f => ({
+        answerId_PlacementAppilcation_Text: f.answerId,
+        fieldId_PlacementAppilcation_Text: f.fieldId,
+        answer_PlacementAppilcation_Text: f.answer
+      }))
+    };
+
+    if (profile?.phone) newApp.phone_PlacementAppilcation_Long = Number(profile.phone);
+    if (profile?.linkedin) newApp.linkedin_PlacementAppilcation_Text = profile.linkedin;
+    if (profile?.github) newApp.github_PlacementAppilcation_Text = profile.github;
+    if (profile?.skills) newApp.skills_PlacementAppilcation_Text = profile.skills;
+    if (profile?.achievements) newApp.studentAchievements_PlacementAppilcation_Text = profile.achievements;
+    if (profile?.projects) newApp.projects_PlacementAppilcation_Text = profile.projects;
+    if (profile?.internshipDetails && profile.internshipDetails.length > 0) {
+      newApp.internshipDetails_PlacementAppilcation_DocumentArray = profile.internshipDetails.map((i: any) => ({
         internCompanyName_PlacementAppilcation_Text: i.companyName,
         duration_PlacementAppilcation_Text: i.duration,
         location_PlacementAppilcation_Text: i.location,
         jobType_PlacementAppilcation_Text: i.jobType
-      })),
+      }));
+    }
 
-      formAnswers_PlacementAppilcation_DocumentArray: formAnswers.map(f => ({
-         answerId_PlacementAppilcation_Text: f.answerId,
-         fieldId_PlacementAppilcation_Text: f.fieldId,
-         answer_PlacementAppilcation_Text: f.answer
-      }))
-    };
+    console.log('--- Submitting Application ---');
+    console.log('Profile State:', profile);
+    console.log('Application Payload:', JSON.stringify(newApp, null, 2));
 
-    this.http.post(`${environment.baseUrl}/placements-app/create-applications`, newApp).subscribe(() => {
+    this.http.post<any>(`${environment.baseUrl}/placements-app/create-applications`, newApp).subscribe(res => {
+      // The Java backend always returns HTTP 200, but puts the actual status in the JSON body
+      if (res && res.statusCode && res.statusCode !== 200 && res.statusCode !== 201) {
+        let errorMsgs = res.responseData?.message || [];
+        if (res.responseData?.data && Array.isArray(res.responseData.data) && res.responseData.data.length > 0) {
+          const dataErrors = res.responseData.data.map((d: any) => `${d.property}: ${d.message || 'Invalid'}`);
+          errorMsgs = [...errorMsgs, ...dataErrors];
+        }
+        if (errorMsgs.length === 0) errorMsgs = ['Failed to apply. Please check your details.'];
+
+        this.toastService.error(errorMsgs.join(' | '));
+        console.error('Backend rejected the application:', res);
+        console.error('Validation errors:', res.responseData?.data);
+        return;
+      }
+
       this.toastService.success(`Applied to ${this.selectedDrive!.company} – ${this.selectedDrive!.title}!`);
-      
+
       // Refresh applications list
       this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-applications`).subscribe(apps => {
         const appsList = extractDataArray(apps);

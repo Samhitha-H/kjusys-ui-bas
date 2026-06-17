@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environment';
 export class ApplicationsPageComponent implements OnInit {
   private applicationsSubject = new BehaviorSubject<Application[]>([]);
   public applications$: Observable<Application[]> = this.applicationsSubject.asObservable();
-  private currentStudentId = '6a2b808f2cfa1b3892b73335';
+  private currentStudentId = '6a2b80a72cfa1b3892b73336';
 
   constructor(private http: HttpClient) {}
 
