@@ -541,7 +541,7 @@
     <div class="bg-gray-100 text-slate-800 flex flex-col text-[13px] font-normal antialiased">
 
       <!-- Main Content Container -->
-      <div class="w-full max-w-5xl mx-auto px-4 py-8 flex-1 flex flex-col">
+      <div class="w-full mx-auto flex-1 flex flex-col" style="max-width: 1024px; padding: 32px 16px;">
 
         <!-- Breadcrumb -->
         <div class="text-[11px] font-medium text-slate-500 mb-4">
@@ -550,10 +550,11 @@
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col mb-12">
+        <div class="bg-white shadow-sm flex-1 flex flex-col mb-12"
+          style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
 
           <!-- Blue Header Banner -->
-          <div class="bg-primary text-white px-8 py-6 relative">
+          <div class="bg-primary text-white relative" style="padding: 24px 32px;">
             <div class="flex justify-between items-center relative z-10">
               <div>
                 <h2 class="text-xl font-bold mb-1">Placement Registration Form</h2>
@@ -573,7 +574,7 @@
           </div>
 
           <!-- Form Body -->
-          <div class="p-8 pb-10 flex-1 flex flex-col">
+          <div class="flex-1 flex flex-col" style="padding: 32px; padding-bottom: 40px;">
 
             <div class="flex justify-between items-center mb-6">
               <div
@@ -596,7 +597,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 mb-8 mt-6">
                   <div class="flex flex-col gap-1.5">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Opting For *</label>
-                    <select id="optingFor" name="opting_for" [(ngModel)]="registrationForm.optingFor" (change)="handleOptingForChange($event)" required
+                    <select id="optingFor" name="opting_for" [(ngModel)]="registrationForm.optingFor"
+                      (change)="handleOptingForChange($event)" required
                       class="w-full px-4 py-3 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M7%2010L12%2015L17%2010%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[position:right_10px_center]">
                       <option value="" disabled selected>Select Preference</option>
                       <option value="placement">Placement</option>
@@ -617,7 +619,7 @@
                 </div>
 
                 <!-- Row 1: Document Download (Left) and Upload (Right) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 mb-8" style="gap: 2rem;">
                   <!-- Left Column: PDF Download -->
                   <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-6 flex flex-col justify-between">
                     <div>
@@ -635,7 +637,8 @@
                         📥 Download Declaration PDF
                       </a>
                       <ng-template #noFile>
-                        <button disabled class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-semibold text-xs rounded-lg shadow-sm cursor-not-allowed">
+                        <button disabled
+                          class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-semibold text-xs rounded-lg shadow-sm cursor-not-allowed">
                           📥 Declaration File Unavailable
                         </button>
                       </ng-template>
@@ -673,8 +676,8 @@
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label class="flex items-start gap-3 text-xs text-slate-600 cursor-pointer">
-                      <input type="checkbox" name="terms_guidelines" [(ngModel)]="registrationForm.termsGuidelines" required
-                        class="placement-req w-4 h-4 mt-0.5 accent-primary rounded border-slate-300">
+                      <input type="checkbox" name="terms_guidelines" [(ngModel)]="registrationForm.termsGuidelines"
+                        required class="placement-req w-4 h-4 mt-0.5 accent-primary rounded border-slate-300">
                       <span>I have read and agree to follow all placement rules and guidelines formulated by the CECR
                         Placement Cell.</span>
                     </label>
@@ -685,13 +688,14 @@
                         accurate.</span>
                     </label>
                     <label class="flex items-start gap-3 text-xs text-slate-600 cursor-pointer">
-                      <input type="checkbox" name="terms_attendance" [(ngModel)]="registrationForm.termsAttendance" required
-                        class="placement-req w-4 h-4 mt-0.5 accent-primary rounded border-slate-300">
+                      <input type="checkbox" name="terms_attendance" [(ngModel)]="registrationForm.termsAttendance"
+                        required class="placement-req w-4 h-4 mt-0.5 accent-primary rounded border-slate-300">
                       <span>I agree to maintain the required attendance and participate in all training sessions and
                         interviews.</span>
                     </label>
                     <label class="flex items-start gap-3 text-xs text-slate-600 cursor-pointer">
-                      <input type="checkbox" name="terms_disqualification" [(ngModel)]="registrationForm.termsDisqualification" required
+                      <input type="checkbox" name="terms_disqualification"
+                        [(ngModel)]="registrationForm.termsDisqualification" required
                         class="placement-req w-4 h-4 mt-0.5 accent-primary rounded border-slate-300">
                       <span>I understand that any discrepancy or misconduct will lead to immediate disqualification from
                         placements.</span>
@@ -734,7 +738,8 @@
                     <div class="flex flex-col gap-1.5">
                       <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Mobile Number
                         *</label>
-                      <input type="tel" name="mobile_number" [(ngModel)]="registrationForm.mobileNumber" pattern="[0-9]{10}"
+                      <input type="tel" name="mobile_number" [(ngModel)]="registrationForm.mobileNumber"
+                        pattern="[0-9]{10}"
                         class="placement-req w-full px-4 py-2.5 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                         placeholder="10-digit number">
                     </div>
@@ -830,11 +835,11 @@
                   </h3>
 
                   <!-- SSLC and PU -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 pb-6 border-b border-slate-100">
+                  <div class="grid grid-cols-1 md:grid-cols-2 mb-6 pb-6 border-b border-slate-100" style="gap: 2rem;">
                     <div>
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">SSLC / 10th Standard</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5 sm:col-span-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                        <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">SSLC / 10th
                             Institution Name *</label>
                           <input type="text" name="sslc_institution" [(ngModel)]="registrationForm.sslcInstitution"
@@ -851,7 +856,8 @@
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">% in SSLC / 10th
                             *</label>
-                          <input type="number" step="0.01" name="sslc_percentage" [(ngModel)]="registrationForm.sslcPercentage"
+                          <input type="number" step="0.01" name="sslc_percentage"
+                            [(ngModel)]="registrationForm.sslcPercentage"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="e.g. 92.5">
                         </div>
@@ -860,8 +866,8 @@
 
                     <div>
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">12th / PU Standard</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5 sm:col-span-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                        <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">12th / PU
                             Institution Name *</label>
                           <input type="text" name="pu_institution" [(ngModel)]="registrationForm.puInstitution"
@@ -878,7 +884,8 @@
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">% in 12th / PU
                             *</label>
-                          <input type="number" step="0.01" name="pu_percentage" [(ngModel)]="registrationForm.puPercentage"
+                          <input type="number" step="0.01" name="pu_percentage"
+                            [(ngModel)]="registrationForm.puPercentage"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="e.g. 88.0">
                         </div>
@@ -887,11 +894,11 @@
                   </div>
 
                   <!-- UG Degree and PG Degree -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 2rem;">
                     <div>
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">Undergraduate Degree</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5 sm:col-span-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                        <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Degree Institution
                             Name *</label>
                           <input type="text" name="degree_institution" [(ngModel)]="registrationForm.degreeInstitution"
@@ -908,13 +915,15 @@
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">% in Degree
                             (Consolidated % till 4th Sem) *</label>
-                          <input type="number" step="0.01" name="degree_percentage" [(ngModel)]="registrationForm.degreePercentage"
+                          <input type="number" step="0.01" name="degree_percentage"
+                            [(ngModel)]="registrationForm.degreePercentage"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="Percentage">
                         </div>
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Backlogs *</label>
-                          <select id="degreeBacklogs" name="degree_backlogs" [(ngModel)]="registrationForm.degreeBacklogs" (change)="toggleBacklogs($event)"
+                          <select id="degreeBacklogs" name="degree_backlogs"
+                            [(ngModel)]="registrationForm.degreeBacklogs" (change)="toggleBacklogs($event)"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors cursor-pointer">
                             <option value="" disabled selected>Select</option>
                             <option value="no">No</option>
@@ -924,7 +933,8 @@
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">If yes, how many
                             backlogs</label>
-                          <input type="number" id="degreeBacklogsCount" name="degree_backlogs_count" [(ngModel)]="registrationForm.degreeBacklogsCount" disabled
+                          <input type="number" id="degreeBacklogsCount" name="degree_backlogs_count"
+                            [(ngModel)]="registrationForm.degreeBacklogsCount" disabled
                             class="w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="0" min="0">
                         </div>
@@ -934,25 +944,27 @@
                     <div>
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">Postgraduate Degree
                         (Optional)</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="flex flex-col gap-1.5 sm:col-span-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                        <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">PG Institution
                             Name</label>
                           <input type="text" name="pg_institution" [(ngModel)]="registrationForm.pgInstitution"
                             class="w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="College/University">
                         </div>
-                        <div class="flex flex-col gap-1.5 sm:col-span-2">
+                        <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">% in PG Degree
                             (Consolidated % till 2nd Sem)</label>
-                          <input type="number" step="0.01" name="pg_percentage" [(ngModel)]="registrationForm.pgPercentage"
+                          <input type="number" step="0.01" name="pg_percentage"
+                            [(ngModel)]="registrationForm.pgPercentage"
                             class="w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="Percentage">
                         </div>
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Backlog in
                             PG</label>
-                          <select id="pgBacklogs" name="pg_backlogs" [(ngModel)]="registrationForm.pgBacklogs" (change)="togglePGBacklogs($event)"
+                          <select id="pgBacklogs" name="pg_backlogs" [(ngModel)]="registrationForm.pgBacklogs"
+                            (change)="togglePGBacklogs($event)"
                             class="w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors cursor-pointer">
                             <option value="" disabled selected>Select</option>
                             <option value="no">No</option>
@@ -962,7 +974,8 @@
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">If yes, how many
                             backlogs</label>
-                          <input type="number" id="pgBacklogsCount" name="pg_backlogs_count" [(ngModel)]="registrationForm.pgBacklogsCount" disabled
+                          <input type="number" id="pgBacklogsCount" name="pg_backlogs_count"
+                            [(ngModel)]="registrationForm.pgBacklogsCount" disabled
                             class="w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                             placeholder="0" min="0">
                         </div>
@@ -981,7 +994,8 @@
                     <div class="flex flex-col gap-1.5">
                       <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Do u have any work
                         experience *</label>
-                      <select id="hasExperience" name="has_experience" [(ngModel)]="registrationForm.hasExperience" (change)="toggleExperience($event)"
+                      <select id="hasExperience" name="has_experience" [(ngModel)]="registrationForm.hasExperience"
+                        (change)="toggleExperience($event)"
                         class="placement-req w-full px-4 py-2.5 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors cursor-pointer">
                         <option value="" disabled selected>Select</option>
                         <option value="no">No</option>
@@ -991,7 +1005,8 @@
                     <div class="flex flex-col gap-1.5">
                       <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Attendance Percentage
                         *</label>
-                      <input type="number" step="0.01" name="attendance_percentage" [(ngModel)]="registrationForm.attendancePercentage"
+                      <input type="number" step="0.01" name="attendance_percentage"
+                        [(ngModel)]="registrationForm.attendancePercentage"
                         class="placement-req w-full px-4 py-2.5 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
                         placeholder="e.g. 85.5" min="0" max="100">
                     </div>
@@ -1055,12 +1070,13 @@
             <!-- Footer Actions (Wizard Navigation) -->
             <div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-100">
               <button type="button" id="btnBack" (click)="prevStep()"
-                class="text-[13px] font-medium text-slate-500 hover:text-slate-800 px-6 py-2.5 transition-colors"
-                [class.invisible]="currentStep === 1">
+                class="text-[13px] font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                style="padding: 10px 24px;" [class.invisible]="currentStep === 1">
                 ← Back
               </button>
               <button type="button" id="btnNext" (click)="nextStep()"
-                class="bg-primary hover:bg-primaryHover text-white px-8 py-2.5 rounded-md font-semibold text-[13px] shadow-sm transition-colors">
+                class="bg-primary hover:bg-primaryHover text-white rounded-md font-semibold text-[13px] shadow-sm transition-colors"
+                style="padding: 10px 32px; min-width: 120px;">
                 {{ getNextButtonText() }}
               </button>
             </div>
@@ -1068,9 +1084,7 @@
           </div>
         </div>
 
-        <div class="text-center py-6 text-xs text-slate-500 font-medium">
-          © Developed by Kristu Jayanti Software Development Centre
-        </div>
+
       </div>
 
 

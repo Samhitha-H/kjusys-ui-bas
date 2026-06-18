@@ -236,14 +236,6 @@ export function mapBackendToProfile(data: any): Profile {
         jobType: i.jobType_PlacementStudent_Text || i.jobType || '',
         duration: i.duration_PlacementStudent_Text || i.duration || ''
       }));
-      if (arr.length === 0 && (data.experienceCompany_PlacementStudent_Text || data.experienceMonths_PlacementStudent_Int)) {
-        arr.push({
-          companyName: data.experienceCompany_PlacementStudent_Text || '',
-          location: '',
-          jobType: 'Work from Office',
-          duration: data.experienceMonths_PlacementStudent_Int ? data.experienceMonths_PlacementStudent_Int.toString() : ''
-        });
-      }
       return arr;
     })()
   };
@@ -410,7 +402,7 @@ export class DashboardComponent implements OnInit {
 
   // Add dummy observables so template doesn't crash if it looks for student switcher
   public students$: Observable<Profile[]> = new BehaviorSubject([]);
-  public activeStudentId$: Observable<string> = new BehaviorSubject('6a2b80a72cfa1b3892b73336');
+  public activeStudentId$: Observable<string> = new BehaviorSubject('6a336749298d1572875f160c');
 
   // Edit profile form state
   public editForm: Partial<Profile> = {};
@@ -464,7 +456,7 @@ export class DashboardComponent implements OnInit {
     resumeFile: null
   };
 
-  private currentStudentId = '6a2b80a72cfa1b3892b73336'; // Mock active user ID
+  private currentStudentId = '6a336749298d1572875f160c'; // Mock active user ID
   public declarationFileUrl: string = '';
 
   constructor(
@@ -1023,8 +1015,13 @@ export class DashboardComponent implements OnInit {
       pgBacklogs_PlacementStudent_Text: this.registrationForm.pgBacklogs === 'yes' ? (this.registrationForm.pgBacklogsCount ? this.registrationForm.pgBacklogsCount.toString() : '0') : '0',
       attendance_PlacementStudent_Text: this.registrationForm.attendancePercentage ? this.registrationForm.attendancePercentage.toString() : null,
       hasExperience_PlacementStudent_Bool: this.registrationForm.hasExperience === 'yes',
-      experienceCompany_PlacementStudent_Text: this.registrationForm.experienceCompany || null,
-      experienceMonths_PlacementStudent_Int: this.registrationForm.experienceMonths ? parseInt(this.registrationForm.experienceMonths.toString(), 10) : null,
+      internshipDetails_PlacementStudent_DocumentArray: this.registrationForm.hasExperience === 'yes' ? [
+        {
+          companyName_PlacementStudent_Text: this.registrationForm.experienceCompany || null,
+          duration_PlacementStudent_Text: this.registrationForm.experienceMonths ? this.registrationForm.experienceMonths.toString() + ' months' : null,
+          location_PlacementStudent_Text: null
+        }
+      ] : [],
       declaration_PlacementStudent_Text: this.registrationForm.declarationFile?.fileName || null,
       studentResume_PlacementStudent_Text: this.registrationForm.resumeFile?.resumeFileName || this.registrationForm.resumeFile?.fileName || null
     };
