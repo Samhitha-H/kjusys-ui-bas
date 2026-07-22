@@ -507,7 +507,7 @@ export class DashboardComponent implements OnInit {
     // Fetch Applications, Drives, Companies, and Batches Together
     const apps$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-applications`).pipe(catchError(() => of([])));
     const drives$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/placements`).pipe(catchError(() => of([])));
-    const companies$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-comnpanies`).pipe(catchError(() => of([])));
+    const companies$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-companies`).pipe(catchError(() => of([])));
     const batches$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-batches`).pipe(catchError(() => of([])));
     const profile$ = this.profileSubject.asObservable().pipe(filter((p: any) => p !== null));
 

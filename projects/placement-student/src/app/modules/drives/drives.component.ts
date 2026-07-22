@@ -74,7 +74,7 @@ export class DrivesComponent implements OnInit {
 
     // Fetch Drives, Companies, and Batches
     const drives$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/placements`).pipe(catchError(() => of([])));
-    const companies$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-comnpanies`).pipe(catchError(() => of([])));
+    const companies$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-companies`).pipe(catchError(() => of([])));
     const batches$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-batches`).pipe(catchError(() => of([])));
 
     combineLatest([drives$, companies$, batches$]).subscribe(([placements, companies, batches]) => {
