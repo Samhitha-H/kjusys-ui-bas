@@ -402,7 +402,7 @@ export class DashboardComponent implements OnInit {
 
   // Add dummy observables so template doesn't crash if it looks for student switcher
   public students$: Observable<Profile[]> = new BehaviorSubject([]);
-  public activeStudentId$: Observable<string> = new BehaviorSubject('6a336749298d1572875f160c');
+  public activeStudentId$: Observable<string> = new BehaviorSubject('6a2b808f2cfa1b3892b73335');
 
   // Edit profile form state
   public editForm: Partial<Profile> = {};
@@ -456,7 +456,7 @@ export class DashboardComponent implements OnInit {
     resumeFile: null
   };
 
-  private currentStudentId = '6a336749298d1572875f160c'; // Mock active user ID
+  private currentStudentId = '6a2b808f2cfa1b3892b73335'; // Mock active user ID
   public declarationFileUrl: string = '';
 
   constructor(
@@ -483,9 +483,13 @@ export class DashboardComponent implements OnInit {
 
     // Fetch Profile
     this.http.get<any>(`${environment.baseUrl}/placements-app/get-student/${this.currentStudentId}`).pipe(
-      map(data => mapBackendToProfile(data))
+      map(data => {
+        const raw = extractDataObject(data) || {};
+        const prof = mapBackendToProfile(data);
+        return { raw, prof };
+      })
     ).subscribe({
-      next: prof => {
+      next: ({ raw, prof }) => {
         this.profileSubject.next(prof);
         this.editForm = { ...prof };
         this.offerLetterSubject.next({
@@ -493,6 +497,49 @@ export class DashboardComponent implements OnInit {
           fileName: prof.offerLetterFileName || null,
           fileUrl: prof.offerLetterUrl || null
         });
+
+        // Pre-fill registrationForm from existing backend data
+        this.registrationForm = {
+          ...this.registrationForm,
+          personalEmail: raw.personalEmail_PlacementStudent_Text || raw.email_PlacementStudent_Text || this.registrationForm.personalEmail,
+          mobileNumber: raw.phone_PlacementStudent_Long ? raw.phone_PlacementStudent_Long.toString() : this.registrationForm.mobileNumber,
+          altMobileNumber: raw.altPhone_PlacementStudent_Long ? raw.altPhone_PlacementStudent_Long.toString() : this.registrationForm.altMobileNumber,
+          panCard: raw.panCard_PlacementStudent_Text || this.registrationForm.panCard,
+          aadharCard: raw.aadhar_PlacementStudent_Long ? raw.aadhar_PlacementStudent_Long.toString() : this.registrationForm.aadharCard,
+          drivingLicense: raw.drivingLicense_PlacementStudent_Text || this.registrationForm.drivingLicense,
+          bloodGroup: raw.bloodGroup_PlacementStudent_Text || this.registrationForm.bloodGroup,
+          fatherName: raw.fatherName_PlacementStudent_Text || this.registrationForm.fatherName,
+          fatherOccupation: raw.fatherOccupation_PlacementStudent_Text || this.registrationForm.fatherOccupation,
+          presentAddress: raw.presentAddress_PlacementStudent_Text || this.registrationForm.presentAddress,
+          permanentAddress: raw.permanentAddress_PlacementStudent_Text || this.registrationForm.permanentAddress,
+          sslcInstitution: raw.tenthInstitution_PlacementStudent_Text || this.registrationForm.sslcInstitution,
+          sslcLocation: raw.tenthLocation_PlacementStudent_Text || this.registrationForm.sslcLocation,
+          sslcPercentage: raw.tenthPer_PlacementStudent_Double ?? this.registrationForm.sslcPercentage,
+          puInstitution: raw.twelfthInstitution_PlacementStudent_Text || this.registrationForm.puInstitution,
+          puLocation: raw.twelfthLocation_PlacementStudent_Text || this.registrationForm.puLocation,
+          puPercentage: raw.twelthPer_PlacementStudent_Double ?? this.registrationForm.puPercentage,
+          degreeInstitution: raw.degreeInstitution_PlacementStudent_Text || this.registrationForm.degreeInstitution,
+          degreeLocation: raw.degreeLocation_PlacementStudent_Text || this.registrationForm.degreeLocation,
+          degreePercentage: raw.cgpa_PlacementStudent_Double ?? this.registrationForm.degreePercentage,
+          degreeBacklogs: (raw.backlogs_PlacementStudent_Int && raw.backlogs_PlacementStudent_Int > 0) ? 'yes' : 'no',
+          degreeBacklogsCount: raw.backlogs_PlacementStudent_Int || this.registrationForm.degreeBacklogsCount,
+          pgInstitution: raw.pgInstitution_PlacementStudent_Text || this.registrationForm.pgInstitution,
+          pgPercentage: raw.pgPer_PlacementStudent_Double ?? this.registrationForm.pgPercentage,
+          pgBacklogs: (raw.pgBacklogs_PlacementStudent_Text && raw.pgBacklogs_PlacementStudent_Text !== '0') ? 'yes' : 'no',
+          pgBacklogsCount: raw.pgBacklogs_PlacementStudent_Text || this.registrationForm.pgBacklogsCount,
+          attendancePercentage: raw.attendance_PlacementStudent_Text || this.registrationForm.attendancePercentage,
+        };
+
+        // Pre-fill internship/experience details if present
+        const internships = raw.internshipDetails_PlacementStudent_DocumentArray;
+        if (internships && Array.isArray(internships) && internships.length > 0) {
+          this.registrationForm.hasExperience = 'yes';
+          this.registrationForm.experienceCompany = internships[0].companyName_PlacementStudent_Text || internships[0].companyName || '';
+          const durationStr = internships[0].duration_PlacementStudent_Text || internships[0].duration || '';
+          const durationMatch = durationStr.match(/(\d+)/);
+          this.registrationForm.experienceMonths = durationMatch ? parseInt(durationMatch[1], 10) : null;
+        }
+
         this.cdr.detectChanges();
       },
       error: err => {
