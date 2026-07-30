@@ -5,6 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { map, catchError, filter } from 'rxjs/operators';
 import { SharedToastService } from '@libs/shared-toast';
 import { environment } from '../../../environments/environment';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Breadcrumb } from '@libs/shared-ui';
 
 export interface Profile {
   id: string; // compatibility
@@ -125,6 +127,7 @@ export interface Drive {
   additionalQuestions: DriveField[];
   fields?: DriveField[]; // database compatibility
   active?: boolean;
+  status?: string;
 }
 
 export interface OfferLetter {
@@ -267,6 +270,56 @@ export function checkEligibility(drive: Drive, profile: Profile): { eligible: bo
   return { eligible: true };
 }
 
+export function evaluateDriveStatus(closeDateRaw: any, activeFlag?: boolean, rawStatus?: string): 'open' | 'closed' | 'results' {
+  if (activeFlag === false || rawStatus === 'closed' || rawStatus === 'Intake Closed') {
+    return 'closed';
+  }
+  if (rawStatus === 'results' || rawStatus === 'Results Declared') {
+    return 'results';
+  }
+  if (!closeDateRaw) {
+    return 'open';
+  }
+
+  let closeDateObj: Date | null = null;
+  if (closeDateRaw instanceof Date) {
+    closeDateObj = closeDateRaw;
+  } else if (typeof closeDateRaw === 'string') {
+    const str = closeDateRaw.trim();
+    if (!str) return 'open';
+
+    const ddmmyyyyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (ddmmyyyyMatch) {
+      const day = parseInt(ddmmyyyyMatch[1], 10);
+      const month = parseInt(ddmmyyyyMatch[2], 10) - 1;
+      const year = parseInt(ddmmyyyyMatch[3], 10);
+      closeDateObj = new Date(year, month, day, 23, 59, 59, 999);
+    } else {
+      const yyyymmddMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (yyyymmddMatch) {
+        const year = parseInt(yyyymmddMatch[1], 10);
+        const month = parseInt(yyyymmddMatch[2], 10) - 1;
+        const day = parseInt(yyyymmddMatch[3], 10);
+        closeDateObj = new Date(year, month, day, 23, 59, 59, 999);
+      } else {
+        const parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) {
+          closeDateObj = parsed;
+        }
+      }
+    }
+  }
+
+  if (closeDateObj && !isNaN(closeDateObj.getTime())) {
+    const now = new Date();
+    if (closeDateObj.getTime() < now.getTime()) {
+      return 'closed';
+    }
+  }
+
+  return 'open';
+}
+
 export function mapBackendToDrives(data: any): Drive[] {
   data = extractDataObject(data);
   const drives: Drive[] = [];
@@ -301,6 +354,10 @@ export function mapBackendToDrives(data: any): Drive[] {
       eligibleBatches = globalBatches;
     }
 
+    const isJobActive = job.active_PlacementDrive_Bool !== false && job.active !== false;
+    const computedStatus = evaluateDriveStatus(driveEnd, isJobActive, data.status);
+    const active = computedStatus === 'open';
+
     drives.push({
       id: job.id || 0,
       jobId: job.jobId_PlacementDrive_Text || job.jobId || '',
@@ -326,7 +383,7 @@ export function mapBackendToDrives(data: any): Drive[] {
       about: job.about || '',
       additionalQuestions: parsedFields,
       fields: parsedFields,
-      active: job.active_PlacementDrive_Bool !== false && job.active !== false
+      active: active
     });
   }
   return drives;
@@ -409,6 +466,11 @@ export class DashboardComponent implements OnInit {
   public showRemoveResumeModal = false;
   public resumeDragOver = false;
 
+  public registrationBreadcrumbs: Breadcrumb[] = [
+    { label: 'Placements' },
+    { label: 'Student Registration' }
+  ];
+
   // New Form variables
   public currentStep = 1;
   public totalSteps = 1;
@@ -457,14 +519,25 @@ export class DashboardComponent implements OnInit {
   };
 
   private currentStudentId = '6a2b808f2cfa1b3892b73335'; // Mock active user ID
-  public declarationFileUrl: string = '';
+  public declarationFileUrl: string | SafeUrl = '';
+
+  public dashBreadcrumbs: Breadcrumb[] = [
+    { label: 'Placements' },
+    { label: 'Dashboard' }
+  ];
+
+  public profileBreadcrumbs: Breadcrumb[] = [
+    { label: 'Placements' },
+    { label: 'Placement Profile' }
+  ];
 
   constructor(
     private http: HttpClient,
     private toastService: SharedToastService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit(): void {
@@ -473,10 +546,18 @@ export class DashboardComponent implements OnInit {
     // Fetch Declarations
     this.http.get<any>(`${environment.baseUrl}/placements-app/list-declarations`).subscribe({
       next: (res) => {
-        if (res && res.data && res.data.length > 0) {
-          const firstDeclaration = res.data[0];
-          this.declarationFileUrl = firstDeclaration.declarationForm_PlacementDeclare_Text || '';
+        const rawData = res?.responseData?.data || res?.data || res;
+        const declList = Array.isArray(rawData) ? rawData : (rawData?.data && Array.isArray(rawData.data) ? rawData.data : []);
+        if (declList && declList.length > 0) {
+          const firstDeclaration = declList[0];
+          const rawUrl = firstDeclaration.declarationForm_PlacementDeclare_Text;
+          if (rawUrl) {
+            this.declarationFileUrl = rawUrl.startsWith('data:') 
+              ? this.sanitizer.bypassSecurityTrustUrl(rawUrl) 
+              : rawUrl;
+          }
         }
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Failed to fetch declarations', err)
     });
@@ -985,6 +1066,44 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  public onDeclarationFileChange(file: File | null): void {
+    if (file) {
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const fileUrl = URL.createObjectURL(file);
+        this.registrationForm.declarationFile = {
+          uploaded: true,
+          fileName: file.name,
+          fileSize: file.size,
+          fileUrl: fileUrl
+        };
+        this.toastService.success(`Signed Declaration "${file.name}" uploaded successfully!`);
+      } else {
+        this.toastService.error('Only PDF files are allowed.');
+      }
+    } else {
+      this.registrationForm.declarationFile = null;
+    }
+  }
+
+  public onResumeFileChange(file: File | null): void {
+    if (file) {
+      if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+        const fileUrl = URL.createObjectURL(file);
+        this.registrationForm.resumeFile = {
+          uploaded: true,
+          fileName: file.name,
+          fileSize: file.size,
+          fileUrl: fileUrl
+        };
+        this.toastService.success(`Resume "${file.name}" uploaded successfully!`);
+      } else {
+        this.toastService.error('Only PDF files are allowed. Please upload a .pdf file.');
+      }
+    } else {
+      this.registrationForm.resumeFile = null;
+    }
+  }
+
   public handleDeclarationUpload(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -1104,9 +1223,9 @@ export class DashboardComponent implements OnInit {
     const optingFor = document.getElementById('optingFor') as HTMLSelectElement;
     const val = optingFor ? optingFor.value : '';
     if (val && val !== 'placement' && this.currentStep === 1) {
-      return 'Submit Registration ✓';
+      return 'Submit Registration';
     } else if (val === 'placement') {
-      return this.currentStep === this.totalSteps ? 'Submit Registration ✓' : 'Next →';
+      return this.currentStep === this.totalSteps ? 'Submit Registration' : 'Next →';
     } else {
       return 'Next →';
     }

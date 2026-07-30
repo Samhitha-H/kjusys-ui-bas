@@ -1,57 +1,70 @@
-<!-- LOADING SPINNER -->
-<div *ngIf="isLoading"
-  style="display:flex; align-items:center; gap:10px; padding:40px 24px; color:#6b7280; font-size:13px; justify-content: center; width: 100%;">
-  <div class="spinner"></div> Loading drives…
-</div>
-
-<div *ngIf="!isLoading" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+<div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
 
   <!-- DRIVES LIST VIEW -->
   <div *ngIf="activeView === 'list'" class="drives-list-container">
     <main class="page-main" style="padding-bottom: 80px;">
-      <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">
-        Placements/ <span style="color:#111827; font-weight:700;">Drives</span>
-      </p>
-      <h1 style="font-size:12px; font-weight:400; color:#111827; margin-bottom:20px;">Drives</h1>
+      <lib-breadcrumbs-title [breadcrumbs]="driveBreadcrumbs" title="Drives"></lib-breadcrumbs-title>
 
       <!-- SEARCH BAR -->
-      <div style="position:relative; margin-bottom:24px; display:block; width:100%;">
-        <span
-          style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#9ca3af; pointer-events:none;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 320px; border-radius: 9999px; border: 2px solid #155DFC; padding: 2px; background: #ffffff; box-sizing: border-box; margin-bottom: 24px;">
+        <input type="text" placeholder="Search by company or role…"
+          style="flex: 1 1 0%; min-width: 0; border: none !important; outline: none !important; box-shadow: none !important; background: transparent !important; padding-left: 16px; padding-right: 8px; height: 32px; font-size: 12px; color: #374151;"
+          [(ngModel)]="searchQuery" />
+        <button type="button"
+          style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 9999px; background-color: #155DFC; color: #ffffff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; padding: 0;"
+          aria-label="Search">
+          <svg style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; display: block; stroke: #ffffff;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="21" y1="21" x2="16.5" y2="16.5" />
           </svg>
-        </span>
-        <input class="search-input" type="text" placeholder="Search by company or role…" [(ngModel)]="searchQuery" />
+        </button>
+      </div>
+
+      <!-- SKELETON LOADING GRID -->
+      <div *ngIf="isLoading" class="drive-grid">
+        <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="drive-card-grid" style="display:flex; flex-direction:column; justify-content:space-between; height:240px; box-sizing:border-box;">
+          <div>
+            <div class="skel" style="width:60%; height:16px; border-radius:4px; margin-bottom:8px;"></div>
+            <div class="skel" style="width:40%; height:12px; border-radius:4px; margin-bottom:16px;"></div>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+              <div style="display:flex; justify-content:space-between;"><div class="skel" style="width:30%; height:12px;"></div><div class="skel" style="width:25%; height:12px;"></div></div>
+              <div style="display:flex; justify-content:space-between;"><div class="skel" style="width:30%; height:12px;"></div><div class="skel" style="width:35%; height:12px;"></div></div>
+              <div style="display:flex; justify-content:space-between;"><div class="skel" style="width:35%; height:12px;"></div><div class="skel" style="width:20%; height:12px;"></div></div>
+              <div style="display:flex; justify-content:space-between;"><div class="skel" style="width:30%; height:12px;"></div><div class="skel" style="width:30%; height:12px;"></div></div>
+            </div>
+          </div>
+          <div>
+            <hr style="border:none; border-top:1px solid #e5e7eb; margin:0 0 12px 0;" />
+            <div class="skel" style="width:40%; height:14px; border-radius:4px;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- DRIVES GRID -->
-      <ng-container *ngIf="getFilteredDrives(drives$ | async) as drivesList">
+      <ng-container *ngIf="!isLoading && getFilteredDrives(drives$ | async) as drivesList">
         <div *ngIf="drivesList.length > 0" class="drive-grid">
           <div *ngFor="let drive of drivesList" class="drive-card-grid" (click)="openDriveDetail(drive)"
             style="display:flex; flex-direction:column; justify-content:space-between;">
             <div>
-              <p style="font-size:18px; font-weight:600; color:#1D1D1F;">{{drive.company}}</p>
-              <p style="font-size:14px;font-weight: 400; color:#9ca3af; margin-top:4px;">{{drive.title}}</p>
+              <p style="font-size:14px; font-weight:600; color:#1D1D1F;">{{drive.company}}</p>
+              <p style="font-size:12px; font-weight:400; color:#9ca3af; margin-top:2px;">{{drive.title}}</p>
 
-              <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+              <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:13px; font-weight: 400; color:#9ca3af;">Package:</span>
-                  <span style="font-size:13px; font-weight:500; color:#111827;">{{drive.lpa}} LPA</span>
+                  <span style="font-size:12px; font-weight:400; color:#9ca3af;">Package:</span>
+                  <span style="font-size:12px; font-weight:500; color:#111827;">{{drive.lpa}} LPA</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:13px;font-weight: 400; color:#9ca3af;">Location:</span>
-                  <span style="font-size:13px; font-weight:500; color:#111827;">{{drive.location}}</span>
+                  <span style="font-size:12px; font-weight:400; color:#9ca3af;">Location:</span>
+                  <span style="font-size:12px; font-weight:500; color:#111827;">{{drive.location}}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:13px;font-weight: 400;color:#9ca3af;">Min Aggregate:</span>
-                  <span style="font-size:13px; font-weight:500; color:#111827;">{{drive.minAggregate}}</span>
+                  <span style="font-size:12px; font-weight:400; color:#9ca3af;">Min Aggregate:</span>
+                  <span style="font-size:12px; font-weight:500; color:#111827;">{{drive.minAggregate}}</span>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:13px; font-weight: 400;color:#9ca3af;">Deadline:</span>
-                  <span style="font-size:13px; font-weight:500; color:#111827;">{{drive.deadline}}</span>
+                  <span style="font-size:12px; font-weight:400; color:#9ca3af;">Deadline:</span>
+                  <span style="font-size:12px; font-weight:500; color:#111827;">{{drive.deadline}}</span>
                 </div>
               </div>
             </div>
@@ -65,11 +78,16 @@
                       <span style="font-size:13px; font-weight:600; color:#2563eb;">Applied</span>
                     </ng-container>
                     <ng-template #notAppliedBlock>
-                      <ng-container *ngIf="checkEligibility(drive, profile).eligible">
-                        <span style="font-size:13px; font-weight:600; color:#16a34a;">You are eligible</span>
+                      <ng-container *ngIf="evaluateDriveStatus(drive.deadline, drive.active, drive.status) === 'closed'">
+                        <span style="font-size:13px; font-weight:600; color:#dc2626;">Intake Closed</span>
                       </ng-container>
-                      <ng-container *ngIf="!checkEligibility(drive, profile).eligible">
-                        <span style="font-size:13px; font-weight:600; color:#ef4444;">Not eligible</span>
+                      <ng-container *ngIf="evaluateDriveStatus(drive.deadline, drive.active, drive.status) === 'open'">
+                        <ng-container *ngIf="checkEligibility(drive, profile).eligible">
+                          <span style="font-size:13px; font-weight:600; color:#16a34a;">You are eligible</span>
+                        </ng-container>
+                        <ng-container *ngIf="!checkEligibility(drive, profile).eligible">
+                          <span style="font-size:13px; font-weight:600; color:#ef4444;">Not eligible</span>
+                        </ng-container>
                       </ng-container>
                     </ng-template>
                   </ng-container>
@@ -93,25 +111,20 @@
   <!-- DRIVE DETAILS VIEW -->
   <div *ngIf="activeView === 'detail' && selectedDrive" class="drive-detail-container">
     <main class="page-main" style="padding-bottom: 80px;">
-      <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">
-        Placements/
-        <button (click)="goBackToList()"
-          style="background:none; border:none; cursor:pointer; color:#9ca3af; font-size:12px; padding:0; font-weight:700;">
-          Drives
-        </button>/
-        <span style="color:#111827; font-weight:700;">{{selectedDrive.company}}</span>
-      </p>
-      <h1 style="font-size:20px; font-weight:600; color:#111827; margin-bottom:20px;">Drives</h1>
+      <div class="dash-header mb-0">
+        <lib-breadcrumbs-title [breadcrumbs]="getDetailBreadcrumbs(selectedDrive)" title="Drive Details"></lib-breadcrumbs-title>
+      </div>
 
-      <div class="detail-card">
+      <div class="detail-card mt-2">
         <div class="detail-header-flex">
           <div>
             <p style="font-size:22px; font-weight:700; color:#111827; margin-bottom:2px;">{{selectedDrive.company}}</p>
             <p style="font-size:14px; color:#6b7280; margin-bottom:10px;">{{selectedDrive.title}}</p>
             <div style="display:flex; gap:8px; align-items:center;">
-              <span
-                style="background:#dcfce7; color:#16a34a; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;">Intake
-                Open</span>
+              <span *ngIf="evaluateDriveStatus(selectedDrive.deadline, selectedDrive.active, selectedDrive.status) === 'open'"
+                style="background:#dcfce7; color:#16a34a; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;">Intake Open</span>
+              <span *ngIf="evaluateDriveStatus(selectedDrive.deadline, selectedDrive.active, selectedDrive.status) === 'closed'"
+                style="background:#fee2e2; color:#dc2626; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;">Intake Closed</span>
               <span
                 style="background:#f3f4f6; color:#374151; font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px;">{{selectedDrive.lpa}}
                 LPA</span>
@@ -119,7 +132,7 @@
           </div>
           <ng-container *ngIf="profile$ | async as profile">
             <ng-container *ngIf="applications$ | async as apps">
-              <button *ngIf="!hasApplied(selectedDrive, apps) && checkEligibility(selectedDrive, profile).eligible"
+              <button *ngIf="!hasApplied(selectedDrive, apps) && evaluateDriveStatus(selectedDrive.deadline, selectedDrive.active, selectedDrive.status) === 'open' && checkEligibility(selectedDrive, profile).eligible"
                 (click)="openApply(selectedDrive)"
                 style="background:#2563eb; color:#fff; font-size:13px; font-weight:600; padding:10px 22px; border-radius:8px; border:none; cursor:pointer; flex-shrink:0;">
                 Apply Now
@@ -134,7 +147,12 @@
                 Applied
               </button>
 
-              <div *ngIf="!hasApplied(selectedDrive, apps) && !checkEligibility(selectedDrive, profile).eligible"
+              <button *ngIf="!hasApplied(selectedDrive, apps) && evaluateDriveStatus(selectedDrive.deadline, selectedDrive.active, selectedDrive.status) === 'closed'" disabled
+                style="background:#f3f4f6; color:#9ca3af; font-size:13px; font-weight:600; padding:10px 22px; border-radius:8px; border:1px solid #e5e7eb; cursor:not-allowed; flex-shrink:0;">
+                Intake Closed
+              </button>
+
+              <div *ngIf="!hasApplied(selectedDrive, apps) && evaluateDriveStatus(selectedDrive.deadline, selectedDrive.active, selectedDrive.status) === 'open' && !checkEligibility(selectedDrive, profile).eligible"
                 style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                 <button disabled
                   style="background:#9ca3af; color:#fff; font-size:13px; font-weight:600; padding:10px 22px; border-radius:8px; border:none; cursor:not-allowed; flex-shrink:0;">
@@ -174,13 +192,6 @@
                 <p style="font-size:13px; font-weight:500; color:#111827;">{{selectedDrive.stipend}}</p>
               </div>
             </div>
-            <hr style="border:none; border-top:1px solid #f3f4f6; margin-bottom:16px;" />
-
-            <p style="font-size:15px; font-weight:500; color:#111827; margin-bottom:10px;">Requirements & Skills</p>
-            <ul
-              style="padding-left:18px; list-style-type: disc; display:flex; flex-direction:column; gap:7px; margin-bottom: 20px;">
-              <li *ngFor="let skill of selectedDrive.skills" style="font-size:13px; color:#374151;">{{skill}}</li>
-            </ul>
           </div>
 
           <div>

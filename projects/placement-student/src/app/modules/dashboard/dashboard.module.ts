@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { DashboardModuleRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
 import { ApplicationsPageComponent } from './applications-page/applications-page.component';
+import { BreadcrumbsTitleComponent, ButtonComponent, MiniFileuploadComponent, FileUploadComponent } from '@libs/shared-ui';
+import { DropdownLibModule } from '@libs/dropdown-lib';
 
 @NgModule({
   declarations: [
@@ -14,7 +16,12 @@ import { ApplicationsPageComponent } from './applications-page/applications-page
   imports: [
     CommonModule,
     FormsModule,
-    DashboardModuleRoutingModule
+    DashboardModuleRoutingModule,
+    BreadcrumbsTitleComponent,
+    ButtonComponent,
+    MiniFileuploadComponent,
+    FileUploadComponent,
+    DropdownLibModule
   ]
 })
 export class DashboardModule { }

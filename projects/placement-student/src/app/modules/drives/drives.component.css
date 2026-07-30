@@ -106,8 +106,32 @@
   }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .drive-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+.search-input {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px 8px 36px;
+  font-size: 13px;
+  color: #111827;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+@keyframes skelPulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1.0; }
+  100% { opacity: 0.5; }
+}
+
+.skel {
+  background: #e2e8f0;
+  border-radius: 6px;
+  animation: skelPulse 1.5s ease-in-out infinite;
 }

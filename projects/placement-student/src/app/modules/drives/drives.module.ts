@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { DrivesModuleRoutingModule } from './drives-routing.module';
 import { DrivesComponent } from './drives.component';
+import { BreadcrumbsTitleComponent, ButtonComponent, MiniFileuploadComponent } from '@libs/shared-ui';
 
 
 @NgModule({
@@ -13,7 +14,10 @@ import { DrivesComponent } from './drives.component';
   imports: [
     CommonModule,
     FormsModule,
-    DrivesModuleRoutingModule
+    DrivesModuleRoutingModule,
+    BreadcrumbsTitleComponent,
+    ButtonComponent,
+    MiniFileuploadComponent
   ]
 })
 export class DrivesModule { }

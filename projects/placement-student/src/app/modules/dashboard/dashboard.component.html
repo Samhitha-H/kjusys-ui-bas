@@ -4,19 +4,14 @@
 
     <div style="width: 100%; height: 100%; position: relative; display: flex; flex-direction: column;">
       <main class="page-main" *ngIf="!(isProfileModalOpen$ | async)">
-        <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">
-          Placements/ <span style="color:#111827; font-weight:700;">Dashboard</span>
-        </p>
-        <div class="page-header-wrap"
-          style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-          <h1 style="font-size:12px; font-weight:450; color:#111827;">Dashboard</h1>
-          <div style="display:flex; align-items:center; gap:12px;">
-            <!-- STUDENT SELECTOR FOR TESTING (REMOVED) -->
-            <button (click)="openEditProfile()"
-              style="background:#2563eb; color:#fff; font-size:13px; font-weight:500; padding:8px 18px; border-radius:8px; border:none; cursor:pointer;">
-              Edit Profile
-            </button>
-          </div>
+        <!-- Breadcrumb Title -->
+        <div class="dash-header mb-0">
+          <lib-breadcrumbs-title [breadcrumbs]="dashBreadcrumbs" title="Dashboard"></lib-breadcrumbs-title>
+        </div>
+
+        <!-- Action Row One Line Below -->
+        <div style="display: flex; align-items: center; justify-content: flex-end; width: 100%; margin-top: 8px; margin-bottom: 24px;">
+          <lib-button label="Edit Profile" type="primary" customClass="px-8 min-w-[140px] shrink-0" (onClick)="openEditProfile()"></lib-button>
         </div>
 
         <!-- MAIN TWO-COLUMN LAYOUT -->
@@ -233,29 +228,25 @@
       </main>
       <!-- ══ EDIT PROFILE PAGE VIEW ══ -->
       <main class="page-main" *ngIf="isProfileModalOpen$ | async"
-        style="flex:1; overflow-y:auto; padding: 16px 20px 80px 20px;">
+        style="flex:1; overflow-y:auto; padding: 18px 8px 80px 8px;">
         <div style="width: 100%; display: flex; flex-direction: column;" *ngIf="profile$ | async as profile">
-          <div class="profile-header-wrap"
-            style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:24px;">
-            <div>
-              <p style="font-size:12px; color:#9ca3af; margin-bottom:4px;">Placements/ <span
-                  style="color:#111827; font-weight:700;">Placement Profile</span></p>
-              <h1 style="font-size:12px; font-weight:400; color:#111827;">Placement Profile</h1>
-            </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-              <button (click)="closeEditProfile()"
-                style="background:#fff; border:1px solid #d1d5db; cursor:pointer; font-size:13px; font-weight:500; color:#374151; padding:8px 18px; border-radius:8px;">Cancel</button>
-              <button (click)="saveProfile()"
-                style="background:#2563eb; color:#fff; font-size:13px; font-weight:500; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                Save Profile
-              </button>
-            </div>
+          <!-- Breadcrumb Title from library -->
+          <lib-breadcrumbs-title [breadcrumbs]="profileBreadcrumbs" title="Placement Profile"></lib-breadcrumbs-title>
+
+          <!-- Buttons Row Below Title -->
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 8px; margin-bottom: 24px;">
+            <button (click)="closeEditProfile()"
+              style="background:#fff; border:1px solid #d1d5db; cursor:pointer; font-size:13px; font-weight:500; color:#374151; padding:8px 18px; border-radius:8px;">Cancel</button>
+            <button (click)="saveProfile()"
+              style="background:#2563eb; color:#fff; font-size:13px; font-weight:500; padding:8px 18px; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save Profile
+            </button>
           </div>
 
           <div class="profile-grid" style="gap:16px; align-items:start;">
@@ -413,7 +404,7 @@
                 <div>
                   <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Notable Achievements /
                     Certifications</p>
-                  <textarea class="ep-textarea" placeholder="e.g. AWS Cloud Practitioner, Hackathon Winner…"
+                  <textarea class="ep-textarea" placeholder="Enter your achievements/certifications"
                     [(ngModel)]="editForm.achievements" (input)="autoResize($event)"></textarea>
                 </div>
               </div>
@@ -449,7 +440,7 @@
                     <div style="flex:1;">
                       <p style="font-size:12px; font-weight:500; color:#1D1D1F; margin-bottom:6px;">Duration</p>
                       <input class="ep-input" type="text" [(ngModel)]="internship.duration"
-                        placeholder="e.g. 3 Months" />
+                        placeholder="Enter internship duration" />
                     </div>
                   </div>
                 </div>
@@ -538,19 +529,16 @@
   </ng-container>
 
   <ng-container *ngIf="profile.optedInStatus === 'pending' || profile.optedInStatus === undefined">
-    <div class="bg-gray-100 text-slate-800 flex flex-col text-[13px] font-normal antialiased">
+    <div class="bg-gray-100 text-slate-800 flex flex-col text-[13px] font-normal antialiased min-h-screen pb-48">
 
       <!-- Main Content Container -->
-      <div class="w-full mx-auto flex-1 flex flex-col" style="max-width: 1024px; padding: 32px 16px;">
+      <div class="w-full mx-auto flex-1 flex flex-col" style="max-width: 1024px; padding: 32px 16px 240px 16px;">
 
         <!-- Breadcrumb -->
-        <div class="text-[11px] font-medium text-slate-500 mb-4">
-          <span class="text-primary cursor-pointer">Placements</span> > <span class="text-slate-800">Student
-            Registration</span>
-        </div>
+        <lib-breadcrumbs-title [breadcrumbs]="registrationBreadcrumbs" title="Student Registration"></lib-breadcrumbs-title>
 
         <!-- Form Card -->
-        <div class="bg-white shadow-sm flex-1 flex flex-col mb-12"
+        <div class="bg-white shadow-sm flex-1 flex flex-col mb-24"
           style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
 
           <!-- Blue Header Banner -->
@@ -574,7 +562,7 @@
           </div>
 
           <!-- Form Body -->
-          <div class="flex-1 flex flex-col" style="padding: 32px; padding-bottom: 40px;">
+          <div class="flex-1 flex flex-col" style="padding: 32px 32px 64px 32px;">
 
             <div class="flex justify-between items-center mb-6">
               <div
@@ -624,7 +612,7 @@
                   <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-6 flex flex-col justify-between">
                     <div>
                       <h3 class="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                        📥 Download Guidelines & Declaration Form
+                        Download Guidelines & Declaration Form
                       </h3>
                       <p class="text-xs text-slate-600 mb-6 leading-relaxed">
                         Please download the official Terms & Condition and Declaration PDF form, read it carefully, and
@@ -632,14 +620,14 @@
                       </p>
                     </div>
                     <div>
-                      <a [href]="declarationFileUrl" download *ngIf="declarationFileUrl; else noFile"
+                      <a [href]="declarationFileUrl" download="Declaration_Form" *ngIf="declarationFileUrl; else noFile"
                         class="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-primary font-semibold text-xs rounded-lg shadow-sm transition-all">
-                        📥 Download Declaration PDF
+                        Download Declaration Form
                       </a>
                       <ng-template #noFile>
                         <button disabled
                           class="inline-flex items-center gap-2 px-5 py-3 bg-slate-100 border border-slate-200 text-slate-400 font-semibold text-xs rounded-lg shadow-sm cursor-not-allowed">
-                          📥 Declaration File Unavailable
+                          Declaration File Unavailable
                         </button>
                       </ng-template>
                     </div>
@@ -649,7 +637,7 @@
                   <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-6 flex flex-col justify-between">
                     <div>
                       <h3 class="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                        📤 Upload Signed Guidelines & Declaration
+                        Upload Signed Guidelines & Declaration
                       </h3>
                       <p class="text-xs text-slate-600 mb-4 leading-relaxed">
                         Upload the signed PDF copy of the guidelines and declaration form here.
@@ -658,13 +646,7 @@
                     <div class="flex flex-col gap-1.5">
                       <label class="text-[11px] font-bold text-primary uppercase tracking-wide">Upload Signed
                         Declaration (PDF) *</label>
-                      <div
-                        class="border border-dashed border-blue-200 rounded-lg p-4 bg-white flex flex-col items-center justify-center gap-2">
-                        <input type="file" id="declarationFile" name="declaration_file"
-                          class="placement-req w-full text-xs text-slate-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 cursor-pointer"
-                          accept=".pdf" (change)="handleDeclarationUpload($event)" required>
-                        <span class="text-[10px] text-slate-400">Only PDF formats are allowed</span>
-                      </div>
+                      <lib-file-upload accept=".pdf" width="100%" title="Upload Signed Declaration (PDF)" hint="Note: Name your file as rollno_name.pdf (Only PDF format allowed)" (fileChange)="onDeclarationFileChange($event)"></lib-file-upload>
                     </div>
                   </div>
                 </div>
@@ -672,7 +654,7 @@
                 <!-- Row 2: Terms & Conditions Checklist above the footer/info-box -->
                 <div class="bg-slate-50 border border-slate-100 rounded-xl p-6 mb-8">
                   <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    📋 Terms & Conditions Checklist
+                    Terms & Conditions Checklist
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label class="flex items-start gap-3 text-xs text-slate-600 cursor-pointer">
@@ -725,7 +707,7 @@
                 <!-- Card 1: Contact & Personal Details -->
                 <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    📞 Contact & Identity Details
+                    Contact & Identity Details
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="flex flex-col gap-1.5">
@@ -792,7 +774,7 @@
                 <!-- Card 2: Family & Address Details -->
                 <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    🏠 Family & Address Details
+                    Family & Address Details
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                     <div class="flex flex-col gap-1.5">
@@ -830,15 +812,15 @@
 
                 <!-- Card 3: Academic Records -->
                 <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
-                  <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    🎓 Academic History
+                  <h3 class="text-sm font-bold text-slate-700 mb-6">
+                    Academic History
                   </h3>
 
-                  <!-- SSLC and PU -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 mb-6 pb-6 border-b border-slate-100" style="gap: 2rem;">
-                    <div>
+                  <div class="flex flex-col gap-6">
+                    <!-- 1. SSLC / 10th Standard -->
+                    <div class="pb-6 border-b border-slate-100">
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">SSLC / 10th Standard</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">SSLC / 10th
                             Institution Name *</label>
@@ -859,14 +841,15 @@
                           <input type="number" step="0.01" name="sslc_percentage"
                             [(ngModel)]="registrationForm.sslcPercentage"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
-                            placeholder="e.g. 92.5">
+                            placeholder="Enter your 10th percentage">
                         </div>
                       </div>
                     </div>
 
-                    <div>
+                    <!-- 2. 12th / PU Standard -->
+                    <div class="pb-6 border-b border-slate-100">
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">12th / PU Standard</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">12th / PU
                             Institution Name *</label>
@@ -887,17 +870,15 @@
                           <input type="number" step="0.01" name="pu_percentage"
                             [(ngModel)]="registrationForm.puPercentage"
                             class="placement-req w-full px-4 py-2 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
-                            placeholder="e.g. 88.0">
+                            placeholder="Enter your 12th percentage">
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  <!-- UG Degree and PG Degree -->
-                  <div class="grid grid-cols-1 md:grid-cols-2" style="gap: 2rem;">
-                    <div>
+                    <!-- 3. Undergraduate Degree -->
+                    <div class="pb-6 border-b border-slate-100">
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">Undergraduate Degree</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Degree Institution
                             Name *</label>
@@ -941,10 +922,11 @@
                       </div>
                     </div>
 
+                    <!-- 4. Postgraduate Degree (Optional) -->
                     <div>
                       <h4 class="text-xs font-bold text-primary mb-3 uppercase tracking-wider">Postgraduate Degree
                         (Optional)</h4>
-                      <div class="grid grid-cols-1 sm:grid-cols-2" style="gap: 1rem;">
+                      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="flex flex-col gap-1.5">
                           <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">PG Institution
                             Name</label>
@@ -987,7 +969,7 @@
                 <!-- Card 4: Internships, Experience & Resume Upload -->
                 <div class="bg-white border border-slate-200 rounded-xl p-6 mb-6">
                   <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
-                    💼 Experience & Resume Upload
+                    Experience & Resume Upload
                   </h3>
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
@@ -1008,7 +990,7 @@
                       <input type="number" step="0.01" name="attendance_percentage"
                         [(ngModel)]="registrationForm.attendancePercentage"
                         class="placement-req w-full px-4 py-2.5 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
-                        placeholder="e.g. 85.5" min="0" max="100">
+                        placeholder="Enter your attendance percentage" min="0" max="100">
                     </div>
                   </div>
 
@@ -1026,7 +1008,7 @@
                         Experience *</label>
                       <input type="number" name="experience_months" [(ngModel)]="registrationForm.experienceMonths"
                         class="w-full px-4 py-2.5 bg-inputBg border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary focus:bg-white transition-colors"
-                        placeholder="e.g. 12" min="1">
+                        placeholder="Enter experience in months" min="1">
                     </div>
                   </div>
 
@@ -1043,13 +1025,7 @@
                   <div class="flex flex-col gap-1.5">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Upload your Resume (File
                       Upload) *</label>
-                    <div
-                      class="border border-dashed border-blue-200 rounded-lg p-6 bg-blue-50/10 flex flex-col items-center justify-center gap-2">
-                      <input type="file" id="resumeFile" name="resume_file"
-                        class="placement-req w-full text-xs text-slate-600 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-primary hover:file:bg-blue-100 cursor-pointer"
-                        accept=".pdf,.doc,.docx" (change)="handleFormResumeUpload($event)" required>
-                      <span class="text-[10px] text-slate-400">PDF, DOC, and DOCX formats are allowed</span>
-                    </div>
+                    <lib-file-upload accept=".pdf" width="100%" title="Upload your Resume" hint="Note: Name your file as rollno_name.pdf (Only PDF format allowed)" (fileChange)="onResumeFileChange($event)"></lib-file-upload>
                   </div>
                 </div>
 
@@ -1068,17 +1044,9 @@
             </form>
 
             <!-- Footer Actions (Wizard Navigation) -->
-            <div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-100">
-              <button type="button" id="btnBack" (click)="prevStep()"
-                class="text-[13px] font-medium text-slate-500 hover:text-slate-800 transition-colors"
-                style="padding: 10px 24px;" [class.invisible]="currentStep === 1">
-                ← Back
-              </button>
-              <button type="button" id="btnNext" (click)="nextStep()"
-                class="bg-primary hover:bg-primaryHover text-white rounded-md font-semibold text-[13px] shadow-sm transition-colors"
-                style="padding: 10px 32px; min-width: 120px;">
-                {{ getNextButtonText() }}
-              </button>
+            <div class="flex justify-between items-center mt-10 pt-6 pb-6 border-t border-slate-100">
+              <lib-button label="Back" type="secondary" (onClick)="prevStep()" [customClass]="currentStep === 1 ? 'invisible min-w-[130px] px-8' : 'min-w-[130px] px-8'"></lib-button>
+              <lib-button [label]="getNextButtonText()" type="primary" customClass="min-w-[140px] px-8" (onClick)="nextStep()"></lib-button>
             </div>
 
           </div>
@@ -1097,8 +1065,7 @@
             ✓</div>
           <h3 class="text-lg font-bold text-slate-800 mb-2">Registration Successful!</h3>
           <p class="text-[13px] text-slate-600 mb-6">Your details have been saved to the database successfully.</p>
-          <button (click)="closeModal()"
-            class="w-full py-2.5 bg-primary hover:bg-primaryHover text-white rounded-md font-semibold transition-colors">Close</button>
+          <lib-button label="Close" type="primary" customClass="w-full justify-center" (onClick)="closeModal()"></lib-button>
         </div>
       </div>
 

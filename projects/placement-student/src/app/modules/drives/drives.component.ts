@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { SharedToastService } from '@libs/shared-toast';
 import { environment } from '../../../environments/environment';
 import { Profile, Drive, Application, FormAnswer, mapBackendToProfile, mapBackendToDrives, mapBackendToApplication, extractDataArray, checkEligibility } from '../dashboard/dashboard.component';
+import { Breadcrumb } from '@libs/shared-ui';
 
 @Component({
   selector: 'app-drives',
@@ -27,6 +28,53 @@ export class DrivesComponent implements OnInit {
   public checkEligibility = checkEligibility;
   public isLoading = true;
 
+  public evaluateDriveStatus(closeDateRaw: any, activeFlag?: boolean, rawStatus?: string): 'open' | 'closed' {
+    if (activeFlag === false || rawStatus === 'closed' || rawStatus === 'Intake Closed') {
+      return 'closed';
+    }
+    if (!closeDateRaw) {
+      return 'open';
+    }
+
+    let closeDateObj: Date | null = null;
+    if (closeDateRaw instanceof Date) {
+      closeDateObj = closeDateRaw;
+    } else if (typeof closeDateRaw === 'string') {
+      const str = closeDateRaw.trim();
+      if (!str) return 'open';
+
+      const ddmmyyyyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (ddmmyyyyMatch) {
+        const day = parseInt(ddmmyyyyMatch[1], 10);
+        const month = parseInt(ddmmyyyyMatch[2], 10) - 1;
+        const year = parseInt(ddmmyyyyMatch[3], 10);
+        closeDateObj = new Date(year, month, day, 23, 59, 59, 999);
+      } else {
+        const yyyymmddMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if (yyyymmddMatch) {
+          const year = parseInt(yyyymmddMatch[1], 10);
+          const month = parseInt(yyyymmddMatch[2], 10) - 1;
+          const day = parseInt(yyyymmddMatch[3], 10);
+          closeDateObj = new Date(year, month, day, 23, 59, 59, 999);
+        } else {
+          const parsed = new Date(str);
+          if (!isNaN(parsed.getTime())) {
+            closeDateObj = parsed;
+          }
+        }
+      }
+    }
+
+    if (closeDateObj && !isNaN(closeDateObj.getTime())) {
+      const now = new Date();
+      if (closeDateObj.getTime() < now.getTime()) {
+        return 'closed';
+      }
+    }
+
+    return 'open';
+  }
+
   // Apply Modal Wizard state
   public showApplyModal = false;
   public applyStep: 'type' | 'default-confirm' | 'upload' | 'upload-confirm' | 'questions' = 'type';
@@ -38,6 +86,19 @@ export class DrivesComponent implements OnInit {
 
   public answeredQuestions: { [id: string]: any } = {};
   public currentQuestions: any[] = [];
+
+  public driveBreadcrumbs: Breadcrumb[] = [
+    { label: 'Placements' },
+    { label: 'Drives' }
+  ];
+
+  public getDetailBreadcrumbs(drive: any): Breadcrumb[] {
+    return [
+      { label: 'Placements' },
+      { label: 'Drives', callback: () => this.goBackToList() },
+      { label: drive?.company || 'Drive Detail' }
+    ];
+  }
 
   private currentStudentId = '6a2b808f2cfa1b3892b73335';
 

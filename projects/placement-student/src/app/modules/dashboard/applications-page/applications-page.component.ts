@@ -12,11 +12,13 @@ import { environment } from '../../../../environments/environment';
 export class ApplicationsPageComponent implements OnInit {
   private applicationsSubject = new BehaviorSubject<Application[]>([]);
   public applications$: Observable<Application[]> = this.applicationsSubject.asObservable();
+  public isLoading: boolean = true;
   private currentStudentId = '6a2b80a72cfa1b3892b73336';
 
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
+    this.isLoading = true;
     const apps$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/list-applications`).pipe(catchError(() => of([])));
     const drives$ = this.http.get<any[]>(`${environment.baseUrl}/placements-app/placements`).pipe(catchError(() => of([])));
 
@@ -42,6 +44,7 @@ export class ApplicationsPageComponent implements OnInit {
       });
 
       this.applicationsSubject.next(userApps);
+      this.isLoading = false;
     });
   }
 }
